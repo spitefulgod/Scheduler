@@ -1,0 +1,19 @@
+@if(workspace.status(); as status) {
+    <span class="item" [title]="'Schema version ' + (status.schemaVersion ?? 'not recorded')">
+        <span class="dot ok"></span>
+        {{ status.database }} on {{ status.server }}
+    </span>
+} @else if(workspace.statusError()) {
+    <span class="item error" [title]="workspace.statusError()">
+        <span class="dot"></span>
+        SchedulerMeta unavailable
+    </span>
+} @else {
+    <span class="item">Connecting...</span>
+}
+<span class="item"><span class="icon">fact_check</span>{{ workspace.validationCount() }} issue(s)</span>
+<span class="spacer"></span>
+<span class="item">Last solve: {{ workspace.lastSolve() ?? 'never' }}</span>
+@if(workspace.profile(); as profile) {
+    <span class="item">{{ profile.timeUnitMinutes }} minute buckets</span>
+}

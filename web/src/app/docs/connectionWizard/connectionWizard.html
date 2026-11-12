@@ -1,0 +1,109 @@
+<div class="doc">
+    <h2>{{ connectionId() ? 'Edit connection' : 'New connection' }}</h2>
+    <p class="lead">Connections are only ever read. Use a login that only has <code>db_datareader</code>.</p>
+
+    <ol class="steps">
+        <li [class.active]="step() == 1" [class.done]="step() > 1">1. Provider</li>
+        <li [class.active]="step() == 2" [class.done]="step() > 2">2. Server and sign in</li>
+        <li [class.active]="step() == 3">3. Test and save</li>
+    </ol>
+
+    <div class="card body">
+        @switch(step()) {
+            @case(1) {
+                <div class="providers">
+                    @for(provider of providers; track provider.id) {
+                        <button type="button" class="provider" [class.selected]="provider.id == 'SQLSERVER'" [disabled]="!provider.available" (click)="step.set(2)">
+                            <span class="icon">{{ provider.icon }}</span>
+                            <span>{{ provider.label }}</span>
+                            @if(!provider.available) {
+                                <span class="pill">Later</span>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+            @case(2) {
+                <form (ngSubmit)="runTest()" (input)="onChange()">
+                    <div class="field">
+                        <label for="connectionName">Connection name</label>
+                        <input id="connectionName" name="name" [(ngModel)]="name" placeholder="e.g. ERP (read only)" required />
+                    </div>
+                    <div class="twoColumns">
+                        <div class="field">
+                            <label for="connectionServer">Server</label>
+                            <input id="connectionServer" name="server" [(ngModel)]="server" placeholder="PLEXSERVER or PLEXSERVER\SQLEXPRESS" required />
+                        </div>
+                        <div class="field">
+                            <label for="connectionDatabase">Database</label>
+                            <input id="connectionDatabase" name="database" [(ngModel)]="database" required />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="connectionSignIn">Sign in</label>
+                        <select id="connectionSignIn" name="signIn" [(ngModel)]="signIn" (change)="onChange()">
+                            <option value="windows">Windows (as the API runs)</option>
+                            <option value="login">SQL Server login</option>
+                        </select>
+                    </div>
+                    @if(signIn == 'login') {
+                        <div class="twoColumns">
+                            <div class="field">
+                                <label for="connectionUser">User</label>
+                                <input id="connectionUser" name="user" [(ngModel)]="user" autocomplete="off" />
+                            </div>
+                            <div class="field">
+                                <label for="connectionPassword">Password</label>
+                                <input id="connectionPassword" name="password" type="password" [(ngModel)]="password" autocomplete="new-password"
+                                    [placeholder]="hasSavedPassword() ? '(unchanged)' : ''" />
+                                <span class="hint">Kept encrypted, never shown again.</span>
+                            </div>
+                        </div>
+                    }
+                    <div class="checks">
+                        <label><input type="checkbox" name="trustServerCertificate" [(ngModel)]="trustServerCertificate" /> Trust the server's certificate</label>
+                    </div>
+                    <div class="actions">
+                        @if(!connectionId()) {
+                            <button type="button" class="button" (click)="step.set(1)">Back</button>
+                        }
+                        <button type="submit" class="button primary" [disabled]="!canContinue() || busy()">
+                            <span class="icon">network_check</span>{{ busy() ? 'Testing...' : 'Test connection' }}
+                        </button>
+                    </div>
+                </form>
+            }
+            @case(3) {
+                @if(test(); as result) {
+                    <div class="result" [class.ok]="result.ok" [class.bad]="!result.ok">
+                        <span class="icon">{{ result.ok ? 'check_circle' : 'error' }}</span>
+                        <div>
+                            <b>{{ result.ok ? 'Connected' : "Couldn't connect" }}</b>
+                            <div>{{ result.message }}</div>
+                        </div>
+                    </div>
+                }
+                <dl class="summary">
+                    <dt>Name</dt>
+                    <dd>{{ name }}</dd>
+                    <dt>Server</dt>
+                    <dd>{{ server }}</dd>
+                    <dt>Database</dt>
+                    <dd>{{ database }}</dd>
+                    <dt>Sign in</dt>
+                    <dd>{{ getSignInText() }}</dd>
+                </dl>
+                <div class="actions">
+                    <button type="button" class="button" (click)="step.set(2)">Back</button>
+                    <button type="button" class="button" [disabled]="busy()" (click)="runTest()"><span class="icon">refresh</span>Test again</button>
+                    <button type="button" class="button primary" [disabled]="busy()" (click)="save()">
+                        <span class="icon">save</span>{{ test()?.ok ? 'Save' : 'Save anyway' }}
+                    </button>
+                </div>
+            }
+        }
+        @if(error()) {
+            <p class="error">{{ error() }}</p>
+        }
+    </div>
+</div>

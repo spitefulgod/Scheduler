@@ -1,0 +1,31 @@
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 640px;
+}
+.item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: left;
+    cursor: pointer;
+    padding: var(--space-3);
+}
+.item:hover,
+.item.current {
+    border-color: var(--accent);
+}
+.item .icon {
+    font-size: 24px;
+    color: var(--accent);
+}
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+.text span {
+    color: var(--text-muted);
+}

@@ -1,0 +1,25 @@
+<div class="doc">
+    <h2>{{ isNew() ? 'New profile' : 'Profile properties' }}</h2>
+    <p class="lead">A profile holds its own entities, setup data and rules.</p>
+    <form class="card form" (ngSubmit)="save()">
+        <div class="field">
+            <label for="profileName">Name</label>
+            <input id="profileName" name="name" [(ngModel)]="name" required maxlength="200" />
+        </div>
+        <div class="field">
+            <label for="profileDescription">Description</label>
+            <input id="profileDescription" name="description" [(ngModel)]="description" maxlength="2000" />
+        </div>
+        <div class="field">
+            <label for="profileTimeUnit">Time unit (minutes)</label>
+            <input id="profileTimeUnit" name="timeUnit" type="number" min="1" max="1440" [(ngModel)]="timeUnitMinutes" />
+            <span class="hint">The solver schedules in buckets of this size, 15 is a good default.</span>
+        </div>
+        @if(error()) {
+            <p class="error">{{ error() }}</p>
+        }
+        <button type="submit" class="button primary" [disabled]="busy() || !name.trim()">
+            <span class="icon">save</span>{{ isNew() ? 'Create profile' : 'Save' }}
+        </button>
+    </form>
+</div>

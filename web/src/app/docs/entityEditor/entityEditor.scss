@@ -1,0 +1,117 @@
+:host {
+    display: block;
+    height: 100%;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 0 var(--space-3);
+}
+.wide {
+    grid-column: 1 / -1;
+}
+.formula {
+    font-family: ui-monospace, Consolas, monospace;
+}
+.head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: var(--space-4) 0 var(--space-2);
+}
+h3 {
+    margin: var(--space-4) 0 var(--space-2);
+    font-size: 13px;
+    font-weight: 600;
+}
+.head h3 {
+    margin: 0;
+}
+.actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+.tableWrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: auto;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+th,
+td {
+    padding: 2px var(--space-1);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+}
+th {
+    background: var(--surface-2);
+    font-weight: 600;
+    height: var(--row-h);
+}
+td input,
+td select {
+    width: 100%;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+}
+td input:hover,
+td select:hover,
+td input:focus,
+td select:focus {
+    border-color: var(--border-strong);
+    background: var(--surface);
+}
+select.roleSet {
+    color: var(--accent);
+    font-weight: 600;
+}
+.order {
+    width: 56px;
+}
+.iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+}
+.iconButton .icon {
+    font-size: 16px;
+}
+.iconButton:hover {
+    background: var(--surface-hover);
+}
+.hint {
+    color: var(--text-faint);
+    font-size: 11px;
+}
+app-data-grid.grid {
+    display: block;
+    height: 320px;
+}
+.danger {
+    color: var(--error);
+}
+.muted {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+.warn {
+    color: var(--warn);
+}
+.error {
+    color: var(--error);
+}

@@ -1,0 +1,68 @@
+<div class="layout">
+    <aside class="tree">
+        <div class="search">
+            <span class="icon">search</span>
+            <input placeholder="Search tables and views" [value]="search()" (input)="onSearch($event)" />
+        </div>
+        <div class="list">
+            @if(loading()) {
+                <p class="muted">Reading tables and views...</p>
+            }
+            @if(error()) {
+                <p class="error">{{ error() }}</p>
+            }
+            @for(group of groups(); track group.schema) {
+                <div class="schema"><span class="icon">folder</span>{{ group.schema }}<span class="count">{{ group.objects.length }}</span></div>
+                @for(item of group.objects; track item.name) {
+                    <button type="button" class="object" [class.selected]="isSelected(item)" (click)="pick(item)">
+                        <span class="icon">{{ item.type == 'view' ? 'visibility' : 'table' }}</span>
+                        <span class="name">{{ item.name }}</span>
+                        @if(isAdded(item)) {
+                            <span class="icon added" title="Already a source in this profile">check</span>
+                        }
+                    </button>
+                }
+            } @empty {
+                @if(!loading() && !error()) {
+                    <p class="muted">No tables or views match.</p>
+                }
+            }
+        </div>
+    </aside>
+
+    <section class="detail">
+        @if(selected(); as item) {
+            <header>
+                <div>
+                    <h2>{{ item.schema }}.{{ item.name }}</h2>
+                    <span class="pill">{{ item.type }}</span>
+                    <span class="muted">{{ getSummary() }}</span>
+                </div>
+                <div class="add">
+                    <input [(ngModel)]="sourceName" placeholder="Source name" aria-label="Source name" />
+                    <button type="button" class="button primary" [disabled]="!workspace.profile()" (click)="addSource()">
+                        <span class="icon">add_box</span>{{ isAdded(item) ? 'Add again' : 'Add as source' }}
+                    </button>
+                </div>
+            </header>
+            <div class="switch">
+                <button type="button" [class.on]="view() == 'preview'" (click)="view.set('preview')">Preview (first 200)</button>
+                <button type="button" [class.on]="view() == 'columns'" (click)="view.set('columns')">Columns</button>
+            </div>
+            @if(previewLoading()) {
+                <p class="muted">Loading...</p>
+            } @else if(view() == 'preview') {
+                @if(preview(); as rows) {
+                    <app-data-grid class="grid" [columns]="rows.columns" [rows]="rows.rows" />
+                }
+            } @else {
+                <app-data-grid class="grid" [columns]="columnGridColumns" [rows]="columnGridRows()" />
+            }
+        } @else {
+            <div class="placeholder">
+                <span class="icon">travel_explore</span>
+                <p>Pick a table or view to preview its data. Previews are read only and show 200 rows at most.</p>
+            </div>
+        }
+    </section>
+</div>

@@ -1,0 +1,336 @@
+<div class="wrap">
+    <header>
+        <div class="title">
+            @if(run(); as current) {
+                <h2>{{ current.published ? 'Published plan' : current.kind == 'WhatIf' ? 'What-if' : current.kind == 'Emergency' ? 'Emergency plan' : 'Run' }}
+                    <span class="muted">{{ formatTime(current.requested) }}</span></h2>
+                <div class="line">
+                    <span class="pill" [class.ok]="statusTone(current.status) == 'ok'" [class.error]="statusTone(current.status) == 'error'">{{ current.status }}</span>
+                    @if(current.published) {
+                        <span class="pill ok">Plan</span>
+                    }
+                    @if(current.discarded) {
+                        <span class="pill">Discarded</span>
+                    }
+                    <span class="muted">{{ current.message }}</span>
+                    @if(isRunning()) {
+                        <span class="muted">{{ elapsed(current) }}</span>
+                    }
+                </div>
+            } @else if(!loading()) {
+                <h2>Schedule</h2>
+                <div class="line muted">Nothing has been published yet. Solve to make a plan.</div>
+            }
+        </div>
+        <div class="actions">
+            @if(isRunning()) {
+                <button type="button" class="button" (click)="stop()"><span class="icon">stop</span>Stop, keep the best so far</button>
+            } @else {
+                <button type="button" class="button primary" [disabled]="busy()" (click)="start('Solve')"><span class="icon">play_arrow</span>Solve</button>
+                <button type="button" class="button" [disabled]="busy() || !moves().length" (click)="start('WhatIf')" title="Plan again with the bars you moved where you put them">
+                    <span class="icon">alt_route</span>What-if ({{ moves().length }})</button>
+                <button type="button" class="button" [disabled]="busy() || !run()?.details" (click)="openEmergency()"><span class="icon">emergency</span>Resource down</button>
+            }
+            @if(canDecide()) {
+                <button type="button" class="button primary" [disabled]="busy()" (click)="publish()"><span class="icon">check</span>Accept and publish</button>
+                <button type="button" class="button" [disabled]="busy()" (click)="discard()"><span class="icon">close</span>Discard</button>
+            }
+        </div>
+    </header>
+
+    @if(error()) {
+        <p class="error">{{ error() }}</p>
+    }
+
+    @if(run(); as current) {
+        @if(statsList().length) {
+            <div class="stats">
+                @for(stat of statsList(); track stat[0]) {
+                    <div class="stat"><b>{{ stat[1] }}</b><span>{{ stat[0] }}</span></div>
+                }
+                <span class="spacer"></span>
+                <div class="viewTools">
+                    <div class="segmented">
+                        <button type="button" [class.on]="workspace.scheduleView() == 'gantt'" (click)="workspace.scheduleView.set('gantt')"><span class="icon">view_timeline</span>Gantt</button>
+                        <button type="button" [class.on]="workspace.scheduleView() == 'table'" (click)="workspace.scheduleView.set('table')"><span class="icon">table_rows</span>Table</button>
+                    </div>
+                    @if(workspace.scheduleView() == 'gantt') {
+                        <button type="button" class="iconButton" title="Zoom out" (click)="zoom(0.5)"><span class="icon">zoom_out</span></button>
+                        <button type="button" class="iconButton" title="Zoom in" (click)="zoom(2)"><span class="icon">zoom_in</span></button>
+                        <label class="muted">Colour by
+                            <select [ngModel]="colourBy()" (ngModelChange)="colourBy.set($event)">
+                                <option [ngValue]="null">Item</option>
+                                @for(name of attributeNames(); track name) {
+                                    <option [ngValue]="name">{{ name }}</option>
+                                }
+                            </select>
+                        </label>
+                    } @else {
+                        <input class="filter" placeholder="Filter" [ngModel]="tableFilter()" (ngModelChange)="tableFilter.set($event)" />
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="main">
+            <div class="chart">
+                @if(current.details && assignments().length) {
+                    @if(workspace.scheduleView() == 'gantt') {
+                        <app-gantt-chart class="gantt" [details]="current.details" [assignments]="assignments()" [colourBy]="colourBy()" [labelBy]="current.details.labelBy"
+                            [hourWidth]="hourWidth()" [selectedKey]="selectedKey()" [movedKeys]="movedKeys()" [lockedUntil]="lockedUntil()" [editable]="!isRunning()"
+                            (selected)="onSelected($event)" (moved)="onMoved($event)" />
+                    } @else {
+                        <div class="tableWrap">
+                            <table>
+                                <thead>
+                                    <tr><th>Resource</th><th>Item</th><th>Part</th><th>Tooling</th><th>Start</th><th>End</th><th class="number">Made</th><th class="number">Cycles</th><th>Due</th><th class="number">Late</th><th>Notes</th></tr>
+                                </thead>
+                                <tbody>
+                                    @for(row of tableRows(); track row.id) {
+                                        <tr [class.selected]="row.itemKey == selectedKey()" [class.late]="row.lateMinutes > 0" (click)="onSelected(row.itemKey)">
+                                            <td>{{ row.resourceKey }}</td>
+                                            <td>{{ row.itemLabel ?? row.itemKey }}@if(row.fixed) { <span class="icon small" title="Locked">lock</span> }</td>
+                                            <td>{{ row.segment >= 0 ? row.segment + 1 : '' }}</td>
+                                            <td>{{ row.poolKey ? row.toolCount + ' x ' + row.poolKey : '' }}</td>
+                                            <td>{{ formatTime(row.startTime) }}</td>
+                                            <td>{{ formatTime(row.endTime) }}</td>
+                                            <td class="number">{{ row.quantity }}</td>
+                                            <td class="number">{{ row.cycles }}</td>
+                                            <td>{{ formatTime(row.dueTime) }}</td>
+                                            <td class="number">{{ hours(row.lateMinutes) }}</td>
+                                            <td class="notes">{{ (row.costReasons ?? []).join(', ') }}</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                } @else if(isRunning()) {
+                    <div class="empty"><span class="icon spin">progress_activity</span>{{ current.message || 'Starting' }}</div>
+                } @else {
+                    <div class="empty">
+                        @if(current.status == 'Infeasible') {
+                            No plan meets every must rule, see the conflicts.
+                        } @else if(current.status == 'Invalid') {
+                            The rules have errors, see the checks.
+                        } @else {
+                            Nothing planned.
+                        }
+                    </div>
+                }
+            </div>
+
+            <aside class="side">
+                <nav class="tabs">
+                    <button type="button" [class.on]="panel() == 'changes'" (click)="panel.set('changes')">Changes</button>
+                    <button type="button" [class.on]="panel() == 'item'" (click)="panel.set('item')">Item</button>
+                    <button type="button" [class.on]="panel() == 'unscheduled'" (click)="panel.set('unscheduled')">Unplanned @if(current.unscheduled?.length) { <i>{{ current.unscheduled!.length }}</i> }</button>
+                    <button type="button" [class.on]="panel() == 'checks'" (click)="panel.set('checks')">Checks @if(current.diagnostics?.length || current.infeasibility?.length) { <i>{{ (current.diagnostics?.length ?? 0) + (current.infeasibility?.length ?? 0) }}</i> }</button>
+                    <button type="button" [class.on]="panel() == 'locks'" (click)="panel.set('locks')">Locks</button>
+                </nav>
+                <div class="panel">
+                    @switch(panel()) {
+                        @case('changes') {
+                            @if(moves().length) {
+                                <h3>Moves to try</h3>
+                                <p class="muted">The what-if plans again with these where you put them, then shows what else would change.</p>
+                                @for(move of moves(); track move.itemKey) {
+                                    <div class="move">
+                                        <span><b>{{ move.itemKey }}</b> on {{ move.resourceKey }} at {{ formatTime(move.start) }}</span>
+                                        <button type="button" class="iconButton" title="Forget this move" (click)="removeMove(move.itemKey)"><span class="icon">close</span></button>
+                                    </div>
+                                }
+                                <button type="button" class="button primary block" [disabled]="busy() || isRunning()" (click)="start('WhatIf')"><span class="icon">alt_route</span>Run the what-if</button>
+                            }
+                            @if(current.changes?.summary; as summary) {
+                                @if(summary.hasBaseline) {
+                                    <h3>Against the published plan</h3>
+                                    <div class="summary">
+                                        <span><b>{{ summary.moved }}</b> moved</span>
+                                        <span><b>{{ summary.retimed }}</b> retimed</span>
+                                        <span><b>{{ summary.added }}</b> added</span>
+                                        <span><b>{{ summary.dropped }}</b> dropped</span>
+                                        <span><b>{{ summary.lateBefore }} → {{ summary.lateAfter }}</b> late</span>
+                                        <span><b>{{ summary.lateHoursBefore }} → {{ summary.lateHoursAfter }}</b> hours late</span>
+                                    </div>
+                                    @if(canDecide()) {
+                                        <div class="decide">
+                                            <button type="button" class="button primary" [disabled]="busy()" (click)="publish()"><span class="icon">check</span>Proceed</button>
+                                            <button type="button" class="button" [disabled]="busy()" (click)="discard()"><span class="icon">undo</span>Abort</button>
+                                        </div>
+                                    }
+                                    <div class="changes">
+                                        @for(change of current.changes!.items; track change.itemKey) {
+                                            <div class="change" [class.selected]="change.itemKey == selectedKey()" (click)="onSelected(change.itemKey)">
+                                                <span class="pill kind" [attr.data-kind]="change.kind">{{ change.kind }}</span>
+                                                <b>{{ change.label ?? change.itemKey }}</b>
+                                                <span class="muted">
+                                                    @if(change.kind == 'Moved') {
+                                                        {{ change.beforeResource }} → {{ change.afterResource }}
+                                                    } @else if(change.kind == 'Added') {
+                                                        on {{ change.afterResource }} {{ formatTime(change.afterStart) }}
+                                                    } @else if(change.kind == 'Dropped') {
+                                                        was on {{ change.beforeResource }}
+                                                    }
+                                                    {{ shift(change.shiftMinutes) }}
+                                                    @if((change.afterLateMinutes ?? 0) != (change.beforeLateMinutes ?? 0)) {
+                                                        , late {{ hours(change.beforeLateMinutes) || '0 h' }} → {{ hours(change.afterLateMinutes) || '0 h' }}
+                                                    }
+                                                </span>
+                                            </div>
+                                        } @empty {
+                                            <p class="muted">Nothing else changes.</p>
+                                        }
+                                    </div>
+                                } @else if(!moves().length) {
+                                    <p class="muted">There's no published plan to compare with yet, accept a run to make it the plan.</p>
+                                }
+                            } @else if(!moves().length) {
+                                <p class="muted">Drag a bar to another resource or time to try a what-if.</p>
+                            }
+                        }
+                        @case('item') {
+                            @if(selectedRows().length) {
+                                @let first = selectedRows()[0];
+                                <h3>{{ first.itemLabel ?? first.itemKey }}</h3>
+                                <dl>
+                                    @for(entry of (first.attributes ?? {}) | keyvalue; track entry.key) {
+                                        <dt>{{ entry.key }}</dt><dd>{{ entry.value }}</dd>
+                                    }
+                                </dl>
+                                @for(row of selectedRows(); track row.id) {
+                                    <div class="segment">
+                                        <b>{{ row.resourceKey }}</b>@if(row.poolKey) { , {{ row.toolCount }} x {{ row.poolKey }} }
+                                        <div class="muted">{{ formatTime(row.startTime) }} to {{ formatTime(row.endTime) }}, {{ row.quantity }} made</div>
+                                        @if(row.lateMinutes > 0) {
+                                            <div class="error">{{ hours(row.lateMinutes) }} late</div>
+                                        }
+                                        @for(reason of row.costReasons ?? []; track reason) {
+                                            <div class="muted">{{ reason }}</div>
+                                        }
+                                        @if(row.inspections?.length) {
+                                            <div class="muted">{{ row.inspections!.length }} inspections</div>
+                                        }
+                                    </div>
+                                }
+                                @if(!isItemLocked(first.itemKey)) {
+                                    <button type="button" class="button block" (click)="lockItem(first.itemKey)"><span class="icon">lock</span>Lock where it is</button>
+                                } @else {
+                                    <p class="muted"><span class="icon small">lock</span> Locked, runs leave it where it is.</p>
+                                }
+                            } @else {
+                                <p class="muted">Click a bar to see its item.</p>
+                            }
+                        }
+                        @case('unscheduled') {
+                            @for(item of current.unscheduled ?? []; track item.itemKey) {
+                                <div class="change">
+                                    <b>{{ item.label }}</b>
+                                    <span class="muted">{{ item.reason }}@if(item.due) { , due {{ formatTime(item.due) }} }</span>
+                                </div>
+                            } @empty {
+                                <p class="muted">Everything is planned.</p>
+                            }
+                        }
+                        @case('checks') {
+                            @if(current.infeasibility?.length) {
+                                <h3>Rules that clash</h3>
+                                <p class="muted">No plan meets all of these together, relax or turn off one of them.</p>
+                                @for(conflict of current.infeasibility!; track conflict.ruleId) {
+                                    <div class="change error"><span class="icon small">report</span>{{ conflict.name }}</div>
+                                }
+                            }
+                            @for(item of current.diagnostics ?? []; track $index) {
+                                <div class="change">
+                                    <span class="pill" [class.error]="item.level == 'error'">{{ item.level }}</span>
+                                    <span>@if(item.ruleName) { <b>{{ item.ruleName }}</b>: }{{ item.message }}</span>
+                                </div>
+                            } @empty {
+                                @if(!current.infeasibility?.length) {
+                                    <p class="muted">No problems found.</p>
+                                }
+                            }
+                        }
+                        @case('locks') {
+                            <p class="muted">Locked work stays where it is when a run plans again. Work already started is always locked.</p>
+                            <div class="lockForm">
+                                <label>Lock the next <input type="number" min="1" max="2000" [(ngModel)]="lockHours" /> hours</label>
+                                <input placeholder="Reason" [(ngModel)]="lockReason" />
+                                <div class="quick">
+                                    <button type="button" class="button" (click)="lockHours = 1; addWindowLock()">Hour</button>
+                                    <button type="button" class="button" (click)="lockHours = 24; addWindowLock()">Day</button>
+                                    <button type="button" class="button" (click)="lockHours = 168; addWindowLock()">Week</button>
+                                    <button type="button" class="button" (click)="lockHours = 720; addWindowLock()">Month</button>
+                                    <button type="button" class="button primary" (click)="addWindowLock()"><span class="icon">lock</span>Lock</button>
+                                </div>
+                            </div>
+                            @for(item of locks(); track item.id) {
+                                <div class="move">
+                                    <span>
+                                        <span class="icon small">lock</span>
+                                        @if(item.kind == 'Window') {
+                                            Until {{ formatTime(item.lockedUntil) }}@if(item.resourceKey) { on {{ item.resourceKey }} }
+                                        } @else {
+                                            {{ item.itemKey }}@if(item.lockedUntil) { until {{ formatTime(item.lockedUntil) }} }
+                                        }
+                                        @if(item.reason) { <span class="muted">, {{ item.reason }}</span> }
+                                    </span>
+                                    <button type="button" class="iconButton" title="Unlock" (click)="deleteLock(item.id)"><span class="icon">lock_open</span></button>
+                                </div>
+                            } @empty {
+                                <p class="muted">Nothing is locked.</p>
+                            }
+                        }
+                    }
+                </div>
+            </aside>
+        </div>
+    } @else if(loading()) {
+        <p class="muted">Loading...</p>
+    }
+
+    @if(emergency(); as current) {
+        <div class="backdrop" (click)="emergency.set(null)">
+            <form class="dialog card" (click)="$event.stopPropagation()" (ngSubmit)="start('Emergency')">
+                <h3><span class="icon">emergency</span> A resource is down</h3>
+                <p class="muted">Its work in that time is released and planned again, only on the alternatives ticked (none ticked lets the rules choose). The rest of the plan stays as steady as it can.</p>
+                <div class="row">
+                    <div class="field">
+                        <label for="downResource">Resource</label>
+                        <select id="downResource" name="resource" [ngModel]="current.resourceKey" (ngModelChange)="updateEmergency({ resourceKey : $event })">
+                            @for(resource of run()?.details?.resources ?? []; track resource.key) {
+                                <option [value]="resource.key">{{ resource.key }} {{ resource.label != resource.key ? resource.label : '' }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="downReason">Reason</label>
+                        <input id="downReason" name="reason" [ngModel]="current.reason" (ngModelChange)="updateEmergency({ reason : $event })" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="downFrom">From</label>
+                        <input id="downFrom" name="from" type="datetime-local" [ngModel]="current.from" (ngModelChange)="updateEmergency({ from : $event })" />
+                    </div>
+                    <div class="field">
+                        <label for="downTo">Back at</label>
+                        <input id="downTo" name="to" type="datetime-local" [ngModel]="current.to" (ngModelChange)="updateEmergency({ to : $event })" />
+                    </div>
+                </div>
+                <label class="muted">Where its work may go</label>
+                <div class="alternatives">
+                    @for(resource of run()?.details?.resources ?? []; track resource.key) {
+                        @if(resource.key != current.resourceKey) {
+                            <label><input type="checkbox" [checked]="current.alternatives[resource.key]" (change)="toggleAlternative(resource.key, $any($event.target).checked)" /> {{ resource.key }}</label>
+                        }
+                    }
+                </div>
+                <div class="decide">
+                    <button type="submit" class="button primary" [disabled]="busy() || !current.resourceKey || current.to <= current.from"><span class="icon">play_arrow</span>Plan around it</button>
+                    <button type="button" class="button" (click)="emergency.set(null)">Cancel</button>
+                </div>
+            </form>
+        </div>
+    }
+</div>

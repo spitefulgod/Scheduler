@@ -1,0 +1,252 @@
+<div class="wrap" tabindex="0" (keydown)="onKey($event)">
+    @if(grid(); as current) {
+        <header>
+            <div>
+                <h2>{{ current.relationship.name }}</h2>
+                <span class="muted">{{ current.relationship.entityA }} × {{ current.relationship.entityB }}, {{ current.relationship.valueScaleName }} scale,
+                    default {{ labelFor(current.relationship.defaultValue ?? '') || 'none' }}
+                    @if(current.relationship.symmetric) { , symmetric }
+                    @if(current.relationship.sourceName) { , read live from {{ current.relationship.sourceName }} }
+                </span>
+            </div>
+            <div class="actions">
+                <div class="segmented">
+                    <button type="button" [class.on]="mode() == 'Matrix'" (click)="mode.set('Matrix')"><span class="icon">grid_on</span>Matrix</button>
+                    <button type="button" [class.on]="mode() == 'List'" (click)="mode.set('List')"><span class="icon">list</span>List</button>
+                </div>
+                @if(current.relationship.sourceId) {
+                    <button type="button" class="button" [disabled]="busy()" (click)="importValues()" title="Copy the source's values in as typed in values"><span class="icon">download</span>Import from source</button>
+                }
+                <button type="button" class="button" (click)="showSettings.set(!showSettings())"><span class="icon">tune</span>Settings</button>
+                <button type="button" class="button primary" [disabled]="busy() || !editCount()" (click)="save()"><span class="icon">save</span>Save {{ editCount() || '' }}</button>
+                @if(editCount()) {
+                    <button type="button" class="button" (click)="discardEdits()"><span class="icon">undo</span>Undo changes</button>
+                }
+            </div>
+        </header>
+        @for(warning of current.warnings; track warning) {
+            <p class="warn">{{ warning }}</p>
+        }
+    } @else if(!showSettings()) {
+        <p class="muted">Loading...</p>
+    }
+    @if(error()) {
+        <p class="error">{{ error() }}</p>
+    }
+
+    @if(showSettings()) {
+        <form class="card settings" (ngSubmit)="saveSettings()">
+            <h3>{{ relationshipId() ? 'Settings' : 'New relationship' }}</h3>
+            <div class="grid3">
+                <div class="field">
+                    <label for="relName">Name</label>
+                    <input id="relName" name="name" [(ngModel)]="settings.name" required />
+                </div>
+                <div class="field">
+                    <label for="relA">Down the side (A)</label>
+                    <select id="relA" name="a" [(ngModel)]="settings.entityTypeAId" required>
+                        @for(entity of entities(); track entity.id) {
+                            <option [value]="entity.id">{{ entity.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="relB">Across the top (B)</label>
+                    <select id="relB" name="b" [(ngModel)]="settings.entityTypeBId" required>
+                        @for(entity of entities(); track entity.id) {
+                            <option [value]="entity.id">{{ entity.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="relScale">Value scale</label>
+                    <select id="relScale" name="scale" [(ngModel)]="settings.valueScaleId">
+                        @for(item of scales(); track item.id) {
+                            <option [value]="item.id">{{ item.name }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="relDefault">Default for pairs not set</label>
+                    <select id="relDefault" name="default" [(ngModel)]="settings.defaultValue">
+                        <option [ngValue]="null">None</option>
+                        @for(value of scaleFor(settings.valueScaleId)?.values ?? []; track value.code) {
+                            <option [ngValue]="value.code">{{ value.label }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="relDrives">Feeds</label>
+                    <select id="relDrives" name="drives" [(ngModel)]="settings.drives">
+                        <option [ngValue]="null">Any rule that names it</option>
+                        @for(item of drives; track item) {
+                            <option [ngValue]="item">{{ item }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="relEditor">Opens as</label>
+                    <select id="relEditor" name="editor" [(ngModel)]="settings.editor">
+                        <option value="Matrix">Matrix</option>
+                        <option value="List">List</option>
+                    </select>
+                </div>
+                <div class="field check">
+                    <label><input type="checkbox" name="symmetric" [(ngModel)]="settings.symmetric" /> Symmetric, A × B is the same as B × A</label>
+                </div>
+            </div>
+            <h3>Read live from a source (optional)</h3>
+            <div class="grid3">
+                <div class="field">
+                    <label for="relSource">Source</label>
+                    <select id="relSource" name="source" [(ngModel)]="settings.sourceId" (ngModelChange)="settings.sourceId = $event; loadColumns()">
+                        <option [ngValue]="null">None, typed in only</option>
+                        @for(source of sources(); track source.id) {
+                            <option [ngValue]="source.itemId">{{ source.label }}</option>
+                        }
+                    </select>
+                </div>
+                @if(settings.sourceId) {
+                    <div class="field">
+                        <label for="relAColumn">A column</label>
+                        <select id="relAColumn" name="aColumn" [(ngModel)]="settings.sourceAColumn">
+                            @for(column of sourceColumns(); track column) {
+                                <option [value]="column">{{ column }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="relBColumn">B column</label>
+                        <select id="relBColumn" name="bColumn" [(ngModel)]="settings.sourceBColumn">
+                            @for(column of sourceColumns(); track column) {
+                                <option [value]="column">{{ column }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="relValueColumn">Value column</label>
+                        <select id="relValueColumn" name="valueColumn" [(ngModel)]="settings.sourceValueColumn">
+                            <option [ngValue]="null">None, every pair listed is allowed</option>
+                            @for(column of sourceColumns(); track column) {
+                                <option [ngValue]="column">{{ column }}</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+            <p class="muted">Values typed in here always win over the source's.</p>
+            <div class="actions">
+                <button type="submit" class="button primary" [disabled]="busy() || !settings.name || !settings.entityTypeAId || !settings.entityTypeBId"><span class="icon">save</span>Save settings</button>
+                @if(relationshipId()) {
+                    <button type="button" class="button" (click)="showSettings.set(false)">Close</button>
+                    <button type="button" class="button danger" (click)="deleteRelationship()"><span class="icon">delete</span>Delete</button>
+                }
+            </div>
+        </form>
+    }
+
+    @if(grid(); as current) {
+        <div class="palette">
+            @if(mode() == 'Matrix') {
+                <span class="muted">{{ selection().size }} selected, set to</span>
+                @if(isNumeric()) {
+                    <input type="number" class="number" [(ngModel)]="numberValue" placeholder="Number" />
+                    <button type="button" class="button" [disabled]="!selection().size || numberValue === ''" (click)="fill(numberValue + '')">Set</button>
+                } @else {
+                    @for(value of scale()?.values ?? []; track value.code) {
+                        <button type="button" class="chip" [style.--chip]="value.colour" [disabled]="!selection().size" (click)="fill(value.code)"
+                            [title]="value.meaning + (value.meaning == 'Penalty' ? ' ' + value.weight : '') + ', key ' + value.code">
+                            <i></i>{{ value.label }}
+                        </button>
+                    }
+                }
+                <button type="button" class="button" [disabled]="!selection().size" (click)="fill('')" title="Back to the source's value or the default">Clear</button>
+                <span class="spacer"></span>
+                <input class="filter" placeholder="Filter {{ current.relationship.entityA }}" [ngModel]="rowFilter()" (ngModelChange)="rowFilter.set($event)" />
+                <input class="filter" placeholder="Filter {{ current.relationship.entityB }}" [ngModel]="columnFilter()" (ngModelChange)="columnFilter.set($event)" />
+            } @else {
+                <span class="muted">{{ listRows().length }} pairs set, the rest use the default</span>
+                <span class="spacer"></span>
+                <input class="filter" placeholder="Filter" [ngModel]="listFilter()" (ngModelChange)="listFilter.set($event)" />
+            }
+        </div>
+
+        @if(mode() == 'Matrix') {
+            <div class="matrix">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="corner" (click)="selectAll()" title="Select all">{{ current.relationship.entityA }} \ {{ current.relationship.entityB }}</th>
+                            @for(column of columns(); track column.key) {
+                                <th class="column" (click)="selectColumn(column.key)" [title]="column.label"><span>{{ column.key }}</span></th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for(row of rows(); track row.key; let r = $index) {
+                            <tr>
+                                <th class="rowHead" (click)="selectRow(row.key)" [title]="row.label">{{ row.key }}<span>{{ row.label != row.key ? row.label : '' }}</span></th>
+                                @for(column of columns(); track column.key; let c = $index) {
+                                    @let cell = getCell(row.key, column.key);
+                                    <td [class.selected]="isSelected(row.key, column.key)" [class.default]="cell.from == 'default'" [class.typed]="cell.from == 'typed'" [class.edit]="cell.from == 'edit'"
+                                        [style.--cell]="getColour(cell.value)" [title]="getTitle(row, column)"
+                                        (mousedown)="onCellDown($event, r, c)" (dblclick)="onCellDouble(row.key, column.key)">{{ cell.value }}</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="hint">Click a cell, shift click for a range, ctrl click to add, or click a heading for the whole row or column. Type a code or pick a value above to set them, double click steps through the values.
+                Faded cells use the default, a dot means typed in.</p>
+        } @else {
+            <div class="matrix">
+                <table class="list">
+                    <thead>
+                        <tr><th>{{ current.relationship.entityA }}</th><th>{{ current.relationship.entityB }}</th><th>Value</th><th>From</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="add">
+                            <td><select [(ngModel)]="newPair.a"><option value=""></option>@for(item of current.a; track item.key) { <option [value]="item.key">{{ item.key }}</option> }</select></td>
+                            <td><select [(ngModel)]="newPair.b"><option value=""></option>@for(item of current.b; track item.key) { <option [value]="item.key">{{ item.key }}</option> }</select></td>
+                            <td>
+                                @if(isNumeric()) {
+                                    <input type="number" [(ngModel)]="newPair.value" />
+                                } @else {
+                                    <select [(ngModel)]="newPair.value"><option value=""></option>@for(value of scale()?.values ?? []; track value.code) { <option [value]="value.code">{{ value.label }}</option> }</select>
+                                }
+                            </td>
+                            <td></td>
+                            <td><button type="button" class="button" (click)="addPair()" [disabled]="!newPair.a || !newPair.b || !newPair.value"><span class="icon">add</span>Add</button></td>
+                        </tr>
+                        @for(row of listRows(); track row.a + row.b) {
+                            <tr>
+                                <td>{{ row.a }}</td>
+                                <td>{{ row.b }}</td>
+                                <td [style.--cell]="getColour(row.value)" class="valueCell">
+                                    @if(isNumeric()) {
+                                        <input type="number" [ngModel]="row.value" (change)="setListValue(row, $any($event.target).value)" />
+                                    } @else {
+                                        <select [ngModel]="row.value" (ngModelChange)="setListValue(row, $event)">
+                                            @for(value of scale()?.values ?? []; track value.code) {
+                                                <option [value]="value.code">{{ value.label }}</option>
+                                            }
+                                        </select>
+                                    }
+                                </td>
+                                <td class="muted">{{ row.from == 'edit' ? 'not saved' : row.from == 'typed' ? 'typed in' : 'source' }}</td>
+                                <td>
+                                    @if(row.from == 'typed') {
+                                        <button type="button" class="iconButton" title="Clear, back to the source or default" (click)="setListValue(row, '')"><span class="icon">close</span></button>
+                                    }
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr><td colspan="5" class="muted">No pairs set, every pair uses the default.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>

@@ -1,0 +1,38 @@
+<div class="head">
+    <span>Navigator</span>
+    <button type="button" class="iconButton" title="Refresh" (click)="workspace.refreshNavigator()"><span class="icon">refresh</span></button>
+</div>
+<div class="search">
+    <span class="icon">search</span>
+    <input placeholder="Filter" [value]="filter()" (input)="onFilter($event)" />
+</div>
+
+<div class="tree" role="tree">
+    @if(!workspace.profile()) {
+        <p class="empty">No profile open, use <b>Home, New Profile</b> or <b>Open</b>.</p>
+    }
+    <ng-template #nodeTemplate let-nodes let-depth="depth">
+        @for(node of getVisible(nodes); track node.id) {
+            <div class="row" role="treeitem" tabindex="0" [class.selected]="workspace.selection()?.id == node.id" [class.folder]="node.kind == 'folder'"
+                [style.padding-left.px]="8 + depth * 14" [attr.aria-expanded]="node.children?.length ? isOpen(node) : null"
+                (click)="workspace.select(node)" (dblclick)="workspace.openNode(node)" (keydown)="onKey($event, node)">
+                @if(node.children?.length) {
+                    <span class="icon twisty" (click)="toggle(node, $event)">{{ isOpen(node) ? 'expand_more' : 'chevron_right' }}</span>
+                } @else {
+                    <span class="twisty"></span>
+                }
+                <span class="icon kind">{{ node.icon }}</span>
+                <span class="label">{{ node.label }}</span>
+                @if(node.kind == 'folder') {
+                    <span class="count">{{ node.children?.length ?? 0 }}</span>
+                } @else if(node.badge) {
+                    <span class="pill" [class]="getBadgeTone(node)">{{ getBadgeText(node) }}</span>
+                }
+            </div>
+            @if(node.children?.length && isOpen(node)) {
+                <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: node.children, depth: depth + 1 }" />
+            }
+        }
+    </ng-template>
+    <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: workspace.navigator(), depth: 0 }" />
+</div>

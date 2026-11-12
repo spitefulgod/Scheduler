@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# Angular / Node
+web/node_modules/
+web/dist/
+web/.angular/
+web/coverage/
+
+# Local
+.env
+*.local.json
+api/Scheduler.Api/wwwroot/
+.DS_Store

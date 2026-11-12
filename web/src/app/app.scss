@@ -1,0 +1,66 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 280px;
+    &.noNav {
+        grid-template-columns: minmax(0, 1fr) 280px;
+    }
+    &.noProps {
+        grid-template-columns: 260px minmax(0, 1fr);
+    }
+    &.noNav.noProps {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.nav {
+    border-right: 1px solid var(--border);
+    min-height: 0;
+}
+.props {
+    border-left: 1px solid var(--border);
+    min-height: 0;
+}
+.docs {
+    min-height: 0;
+}
+
+.toasts {
+    position: fixed;
+    right: var(--space-4);
+    bottom: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    z-index: 100;
+}
+.toast {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 420px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+    &.ok .icon {
+        color: var(--ok);
+    }
+    &.error {
+        border-color: var(--error);
+        .icon {
+            color: var(--error);
+        }
+    }
+    &.info .icon {
+        color: var(--accent);
+    }
+}

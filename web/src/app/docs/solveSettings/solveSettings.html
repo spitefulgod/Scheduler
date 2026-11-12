@@ -1,0 +1,42 @@
+<div class="doc">
+    <h2>Solve settings</h2>
+    <p class="lead">Used by every run of this profile. A run always gives back the best plan it found when its time is up.</p>
+    <form class="card form" (ngSubmit)="save()">
+        <div class="field">
+            <label for="setDays">Plan ahead (days)</label>
+            <input id="setDays" name="days" type="number" min="1" max="366" [(ngModel)]="settings.horizonDays" />
+        </div>
+        <div class="field">
+            <label for="setLimit">Search for at most (seconds)</label>
+            <input id="setLimit" name="limit" type="number" min="1" max="3600" [(ngModel)]="settings.timeLimitSeconds" />
+            <span class="hint">Longer finds better plans for big problems, Stop keeps the best so far.</span>
+        </div>
+        <div class="field">
+            <label for="setLock">Always lock the next (hours)</label>
+            <input id="setLock" name="lock" type="number" min="0" max="8784" [(ngModel)]="settings.lockHours" />
+            <span class="hint">Work in the published plan that starts within this many hours stays put. Work already running is always locked.</span>
+        </div>
+        <div class="field check">
+            <label><input type="checkbox" name="unscheduled" [(ngModel)]="settings.allowUnscheduled" /> Leave items out when they can't fit, rather than failing the run</label>
+        </div>
+        <div class="field">
+            <label for="setColour">Colour the Gantt by</label>
+            <select id="setColour" name="colour" [(ngModel)]="settings.colourBy">
+                <option [ngValue]="null">Item</option>
+                @for(name of attributes(); track name) {
+                    <option [ngValue]="name">{{ name }}</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="setLabel">Label bars with</label>
+            <select id="setLabel" name="label" [(ngModel)]="settings.labelBy">
+                <option [ngValue]="null">The item's key</option>
+                @for(name of attributes(); track name) {
+                    <option [ngValue]="name">{{ name }}</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="button primary" [disabled]="busy()"><span class="icon">save</span>Save</button>
+    </form>
+</div>

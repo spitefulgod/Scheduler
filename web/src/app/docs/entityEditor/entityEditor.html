@@ -1,0 +1,125 @@
+<div class="doc">
+    <h2>{{ entityId() ? name : 'New entity' }}</h2>
+    <p class="lead">Items are scheduled, resources are what they run on or draw from, references are looked up, e.g. a compound's temperature.</p>
+    @if(error()) {
+        <p class="error">{{ error() }}</p>
+    }
+    <div class="card">
+        <div class="grid">
+            <div class="field">
+                <label for="entityName">Name</label>
+                <input id="entityName" [(ngModel)]="name" />
+            </div>
+            <div class="field">
+                <label for="entityKind">Kind</label>
+                <select id="entityKind" [(ngModel)]="kind">
+                    <option value="Item">Item (scheduled)</option>
+                    <option value="Resource">Resource</option>
+                    <option value="Reference">Reference</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="entitySource">Source</label>
+                <select id="entitySource" [(ngModel)]="sourceId" (ngModelChange)="sourceId = $event; loadColumns()">
+                    <option [ngValue]="null">None</option>
+                    @for(source of sources(); track source.id) {
+                        <option [ngValue]="source.itemId">{{ source.label }}</option>
+                    }
+                </select>
+            </div>
+            <div class="field wide">
+                <label for="entityDescription">Description</label>
+                <input id="entityDescription" [(ngModel)]="description" />
+            </div>
+            @if(kind == 'Item') {
+                <div class="field wide">
+                    <label for="entityDuration">Duration formula (minutes)</label>
+                    <input id="entityDuration" class="formula" [(ngModel)]="durationFormula" placeholder="e.g. qty * cycle_secs / 60, blank when tooling rules give cycles" />
+                    <span class="hint">For items without a cycle based tooling rule. Uses the attribute names below.</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="head">
+        <h3>Attributes</h3>
+        <div class="actions">
+            @if(columns().length) {
+                <button type="button" class="button" (click)="addUnmapped()"><span class="icon">playlist_add</span>Add unmapped columns</button>
+            }
+            <button type="button" class="button" (click)="addAttribute()"><span class="icon">add</span>Add</button>
+        </div>
+    </div>
+    <div class="tableWrap">
+        <table>
+            <thead>
+                <tr><th></th><th>Name</th><th>Column</th><th>Type</th><th>Role</th><th>Refers to</th><th></th></tr>
+            </thead>
+            <tbody>
+                @for(attribute of attributes; track $index; let i = $index) {
+                    <tr>
+                        <td class="order">
+                            <button type="button" class="iconButton" (click)="moveAttribute(i, -1)" title="Up"><span class="icon">arrow_upward</span></button>
+                            <button type="button" class="iconButton" (click)="moveAttribute(i, 1)" title="Down"><span class="icon">arrow_downward</span></button>
+                        </td>
+                        <td><input [(ngModel)]="attribute.name" placeholder="name" /></td>
+                        <td>
+                            <select [(ngModel)]="attribute.sourceColumn" (ngModelChange)="attribute.sourceColumn = $event; onColumn(attribute)">
+                                <option [ngValue]="null">None</option>
+                                @for(column of columns(); track column.name) {
+                                    <option [ngValue]="column.name">{{ column.name }}</option>
+                                }
+                                @if(attribute.sourceColumn && !columns().some(x => x.name == attribute.sourceColumn)) {
+                                    <option [ngValue]="attribute.sourceColumn">{{ attribute.sourceColumn }} (missing)</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <select [(ngModel)]="attribute.dataType">
+                                @for(type of types; track type) {
+                                    <option [value]="type">{{ type }}</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <select [(ngModel)]="attribute.role" [class.roleSet]="attribute.role != 'Custom'">
+                                @for(role of roles; track role) {
+                                    <option [value]="role">{{ role }}</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <select [(ngModel)]="attribute.referencesEntityTypeId">
+                                <option [ngValue]="null"></option>
+                                @for(entity of entities(); track entity.id) {
+                                    @if(entity.id != entityId()) {
+                                        <option [ngValue]="entity.id">{{ entity.name }}</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td><button type="button" class="iconButton" (click)="removeAttribute(i)" title="Remove"><span class="icon">delete</span></button></td>
+                    </tr>
+                } @empty {
+                    <tr><td colspan="7" class="muted">No attributes yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="hint">Roles tell the solver what a value means: Id is the key, DueDate and ReleaseDate bound the item, Copies and Size describe tooling. Refers to lets rules follow it, e.g. item.compound.temperature.</p>
+    <div class="actions">
+        <button type="button" class="button primary" [disabled]="busy() || !name.trim()" (click)="save()"><span class="icon">save</span>Save</button>
+        @if(entityId()) {
+            <button type="button" class="button" (click)="loadPreview()"><span class="icon">preview</span>Preview rows</button>
+            <button type="button" class="button danger" (click)="deleteEntity()"><span class="icon">delete</span>Delete</button>
+        }
+    </div>
+
+    @if(preview(); as rows) {
+        <h3>Rows as the rules see them <span class="muted">{{ rows.rows.length }} of {{ rows.total }}</span></h3>
+        @for(warning of rows.warnings; track warning) {
+            <p class="warn">{{ warning }}</p>
+        }
+        <app-data-grid class="grid" [columns]="previewColumns()" [rows]="rows.rows" />
+    }
+</div>

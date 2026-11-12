@@ -1,0 +1,100 @@
+<div class="doc">
+    <h2>{{ calendarId() ? name : 'New calendar' }}</h2>
+    <p class="lead">Work only happens in the shifts. With no shifts a calendar is open all the time, or follows the calendar it inherits from. Exceptions win over the shifts.</p>
+    @if(error()) {
+        <p class="error">{{ error() }}</p>
+    }
+    <div class="card grid">
+        <div class="field">
+            <label for="calName">Name</label>
+            <input id="calName" [(ngModel)]="name" />
+        </div>
+        <div class="field">
+            <label for="calParent">Inherits from</label>
+            <select id="calParent" [(ngModel)]="parentCalendarId">
+                <option [ngValue]="null">Nothing</option>
+                @for(item of calendars(); track item.id) {
+                    @if(item.id != calendarId()) {
+                        <option [ngValue]="item.id">{{ item.name }}</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="calEntity">For a resource of</label>
+            <select id="calEntity" [(ngModel)]="resourceEntityTypeId">
+                <option [ngValue]="null">None, a shared calendar</option>
+                @for(entity of resourceEntities(); track entity.id) {
+                    <option [ngValue]="entity.id">{{ entity.name }}</option>
+                }
+            </select>
+        </div>
+        @if(resourceEntityTypeId) {
+            <div class="field">
+                <label for="calKey">Resource key</label>
+                <input id="calKey" [(ngModel)]="resourceKey" placeholder="e.g. P01" />
+            </div>
+        }
+    </div>
+
+    <div class="head">
+        <h3>Week</h3>
+        <button type="button" class="button" (click)="copyMonday()"><span class="icon">content_copy</span>Copy Monday to weekdays</button>
+    </div>
+    <div class="card week">
+        <div class="hours">
+            <span></span>
+            <div class="scale">@for(hour of [0, 6, 12, 18]; track hour) { <i [style.left.%]="hour / 24 * 100">{{ hour }}:00</i> }</div>
+            <span></span>
+        </div>
+        @for(day of order; track day) {
+            <div class="day">
+                <b>{{ days[day] }}</b>
+                <div class="bar">
+                    @for(bar of bars(day); track $index) {
+                        <span [style.left.%]="bar.left" [style.width.%]="bar.width"></span>
+                    }
+                </div>
+                <div class="shifts">
+                    @for(shift of shiftsOn(day); track $index) {
+                        <span class="shift">
+                            <input type="time" [(ngModel)]="shift.startTime" /> to <input type="time" [(ngModel)]="shift.endTime" />
+                            <button type="button" class="iconButton" (click)="removeShift(shift)" title="Remove"><span class="icon">close</span></button>
+                        </span>
+                    }
+                    <button type="button" class="iconButton" (click)="addShift(day)" title="Add a shift"><span class="icon">add</span></button>
+                </div>
+            </div>
+        }
+        <p class="hint">An end at or before the start runs past midnight, 06:00 to 06:00 is a full day.</p>
+    </div>
+
+    <div class="head">
+        <h3>Exceptions</h3>
+        <button type="button" class="button" (click)="addException()"><span class="icon">add</span>Add</button>
+    </div>
+    <div class="card">
+        @for(item of exceptions; track $index; let i = $index) {
+            <div class="exception">
+                <select [(ngModel)]="item.kind">
+                    <option value="Down">Down</option>
+                    <option value="Available">Working</option>
+                </select>
+                <input type="datetime-local" [(ngModel)]="item.startTime" />
+                <span>to</span>
+                <input type="datetime-local" [(ngModel)]="item.endTime" />
+                <input class="reason" [(ngModel)]="item.reason" placeholder="Reason, e.g. Shutdown" />
+                <button type="button" class="iconButton" (click)="removeException(i)" title="Remove"><span class="icon">delete</span></button>
+            </div>
+        } @empty {
+            <p class="muted">No exceptions.</p>
+        }
+    </div>
+
+    <div class="actions">
+        <button type="button" class="button primary" [disabled]="busy() || !name.trim()" (click)="save()"><span class="icon">save</span>Save</button>
+        @if(calendarId()) {
+            <button type="button" class="button danger" (click)="deleteCalendar()"><span class="icon">delete</span>Delete</button>
+        }
+    </div>
+</div>

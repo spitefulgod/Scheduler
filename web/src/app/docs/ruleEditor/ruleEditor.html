@@ -1,0 +1,161 @@
+<div class="layout">
+    <aside class="palette">
+        <h3>Blocks</h3>
+        @for(category of categories(); track category.name) {
+            <div class="category">{{ category.name }}</div>
+            @for(item of category.types; track item.id) {
+                <button type="button" class="block" [class.on]="item.id == typeId()" draggable="true" (dragstart)="onDragStart($event, item.id)" (click)="pick(item.id)" [title]="item.description ?? ''">
+                    <span class="icon">drag_indicator</span>{{ item.name }}
+                </button>
+            }
+        }
+    </aside>
+
+    <div class="builder">
+        <header>
+            <div class="field grow">
+                <label for="ruleName">Rule</label>
+                <input id="ruleName" class="name" [(ngModel)]="name" placeholder="What the rule says, e.g. Silicone only on presses 7 to 10" />
+            </div>
+            <label class="toggle"><input type="checkbox" [(ngModel)]="enabled" /> On</label>
+            <button type="button" class="button primary" [disabled]="busy() || !type() || !name.trim()" (click)="save()"><span class="icon">save</span>Save</button>
+            <button type="button" class="button" [disabled]="busy()" (click)="runCheck()"><span class="icon">fact_check</span>Check</button>
+            @if(ruleId()) {
+                <button type="button" class="button danger" (click)="deleteRule()" title="Delete the rule"><span class="icon">delete</span></button>
+            }
+        </header>
+        @if(error()) {
+            <p class="error">{{ error() }}</p>
+        }
+
+        <div class="chain">
+            <section class="card step">
+                <span class="tag">WHO</span>
+                <div class="body">
+                    <div class="field">
+                        <label for="ruleWho">For each</label>
+                        <select id="ruleWho" [ngModel]="whoEntity()" (ngModelChange)="whoEntity.set($event)">
+                            <option [ngValue]="null">Everything (profile wide)</option>
+                            @for(entity of itemEntities(); track entity.id) {
+                                <option [ngValue]="entity.name">{{ entity.name }}</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <span class="link icon">south</span>
+            <section class="card step">
+                <span class="tag">WHEN</span>
+                <div class="body">
+                    <div class="field">
+                        <label for="ruleWhen">Only where (blank for all)</label>
+                        <input id="ruleWhen" class="formula" [(ngModel)]="when" (focus)="focusField.set('when')" placeholder="e.g. item.compound = 'SIL-50' and item.qty > 500" />
+                    </div>
+                </div>
+            </section>
+            <span class="link icon">south</span>
+            <section class="card step" [class.target]="dropping()" (dragover)="$event.preventDefault(); dropping.set(true)" (dragleave)="dropping.set(false)" (drop)="onDrop($event)">
+                <span class="tag">{{ strength == 'Hard' ? 'MUST' : 'SHOULD' }}</span>
+                <div class="body">
+                    <div class="strength">
+                        <div class="segmented">
+                            <button type="button" [class.on]="strength == 'Hard'" [disabled]="type() && !type()!.supportsHard" (click)="strength = 'Hard'">Must</button>
+                            <button type="button" [class.on]="strength == 'Soft'" [disabled]="type() && !type()!.supportsSoft" (click)="strength = 'Soft'">Should</button>
+                        </div>
+                        @if(strength == 'Soft') {
+                            <label>weight <input type="number" min="0" max="100000" class="weight" [(ngModel)]="weight" /></label>
+                            <span class="muted">Higher costs more when it's broken</span>
+                        } @else {
+                            <span class="muted">Never broken, a plan that can't keep it names it as a conflict</span>
+                        }
+                    </div>
+                    @if(type(); as current) {
+                        <div class="blockName"><span class="icon">extension</span><b>{{ current.name }}</b></div>
+                        <p class="muted">{{ current.description }}</p>
+                    } @else {
+                        <div class="drop">Pick or drag a block from the left</div>
+                    }
+                </div>
+            </section>
+            @if(type(); as current) {
+                @if(current.parameters.length) {
+                    <span class="link icon">south</span>
+                    <section class="card step">
+                        <span class="tag">WITH</span>
+                        <div class="body params">
+                            @for(parameter of current.parameters; track parameter.name) {
+                                <div class="field">
+                                    <label [for]="'p_' + parameter.name">{{ parameter.label }}@if(parameter.required) { <i>*</i> }</label>
+                                    @switch(parameter.type) {
+                                        @case('entity') {
+                                            <select [id]="'p_' + parameter.name" [(ngModel)]="params[parameter.name]">
+                                                <option [ngValue]="null"></option>
+                                                @for(entity of entitiesFor(parameter); track entity.id) {
+                                                    <option [ngValue]="entity.name">{{ entity.name }}</option>
+                                                }
+                                            </select>
+                                        }
+                                        @case('relationship') {
+                                            <select [id]="'p_' + parameter.name" [(ngModel)]="params[parameter.name]">
+                                                <option [ngValue]="null"></option>
+                                                @for(relationship of relationships(); track relationship.id) {
+                                                    <option [ngValue]="relationship.id">{{ relationship.name }} ({{ relationship.entityA }} × {{ relationship.entityB }})</option>
+                                                }
+                                            </select>
+                                        }
+                                        @case('select') {
+                                            <select [id]="'p_' + parameter.name" [(ngModel)]="params[parameter.name]">
+                                                <option [ngValue]="null"></option>
+                                                @for(option of parameter.options ?? []; track option) {
+                                                    <option [ngValue]="option">{{ option }}</option>
+                                                }
+                                            </select>
+                                        }
+                                        @case('boolean') {
+                                            <select [id]="'p_' + parameter.name" [(ngModel)]="params[parameter.name]">
+                                                <option [ngValue]="null"></option>
+                                                <option ngValue="true">Yes</option>
+                                                <option ngValue="false">No</option>
+                                            </select>
+                                        }
+                                        @case('number') {
+                                            <input [id]="'p_' + parameter.name" type="number" [(ngModel)]="params[parameter.name]" />
+                                        }
+                                        @default {
+                                            <input [id]="'p_' + parameter.name" class="formula" [(ngModel)]="params[parameter.name]" (focus)="focusField.set(parameter.name)"
+                                                [placeholder]="parameter.default ?? (parameter.type == 'condition' ? 'a true or false formula' : 'a number, a name or a formula')" />
+                                        }
+                                    }
+                                    @if(getHelp(parameter)) {
+                                        <span class="hint">{{ getHelp(parameter) }}</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            }
+        </div>
+    </div>
+
+    <aside class="side">
+        <h3>Names for formulas</h3>
+        <p class="muted">Click one to add it to the {{ focusField() == 'when' ? 'when' : focusField() }} box. Formulas can use + - * / %, = != &lt; &gt;, and, or, not, min, max, if, isnull, round.</p>
+        <div class="names">
+            @for(item of names(); track item.text) {
+                <button type="button" class="nameChip" [title]="item.title" (click)="insertName(item.text)">{{ item.text }}</button>
+            }
+        </div>
+        @if(check(); as result) {
+            <h3>Check</h3>
+            @if(ruleStat(); as stat) {
+                <p class="affects"><b>Affects {{ stat.items }} {{ result.itemEntity ?? 'items' }}</b>
+                    @if(stat.modesRemoved) { , rules out {{ stat.modesRemoved }} {{ result.resourceEntity ?? 'resource' }} choices }</p>
+            }
+            <p class="muted">{{ result.items }} items, {{ result.resources }} resources, {{ result.modes }} ways to run them, {{ result.noMode }} with no way.</p>
+            @for(item of ruleDiagnostics(); track $index) {
+                <div class="diag" [class.error]="item.level == 'error'">@if(item.ruleName) { <b>{{ item.ruleName }}:</b> }{{ item.message }}</div>
+            }
+        }
+    </aside>
+</div>

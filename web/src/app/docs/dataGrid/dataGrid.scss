@@ -1,0 +1,69 @@
+:host {
+    display: block;
+    min-height: 0;
+}
+.wrap {
+    overflow: auto;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
+    min-width: 100%;
+}
+th,
+td {
+    height: var(--row-h);
+    padding: 0 var(--space-2);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    text-align: left;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-2);
+    font-weight: 600;
+    z-index: 1;
+}
+th .type {
+    margin-left: 6px;
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: 11px;
+}
+td.number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+td.null {
+    color: var(--text-faint);
+    font-style: italic;
+}
+.rowNumber {
+    position: sticky;
+    left: 0;
+    background: var(--surface-2);
+    color: var(--text-faint);
+    text-align: right;
+    width: 44px;
+    z-index: 2;
+}
+th.rowNumber {
+    z-index: 3;
+}
+tbody tr:hover td {
+    background: var(--surface-hover);
+}
+.empty {
+    padding: var(--space-4);
+    color: var(--text-faint);
+}

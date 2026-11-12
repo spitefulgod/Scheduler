@@ -1,0 +1,20 @@
+<div class="doc">
+    <h2>Open profile</h2>
+    <p class="lead">Choose a scheduler set up.</p>
+    <div class="list">
+        @for(profile of workspace.profiles(); track profile.id) {
+            <button type="button" class="item card" [class.current]="profile.id == workspace.profileId()" (click)="open(profile.id)">
+                <span class="icon">event_note</span>
+                <span class="text">
+                    <b>{{ profile.name }}</b>
+                    <span>{{ profile.description || 'No description' }}</span>
+                </span>
+                @if(profile.id == workspace.profileId()) {
+                    <span class="pill ok">Open</span>
+                }
+            </button>
+        } @empty {
+            <p>No profiles yet.</p>
+        }
+    </div>
+</div>

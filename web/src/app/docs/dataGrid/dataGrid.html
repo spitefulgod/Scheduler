@@ -1,0 +1,25 @@
+<div class="wrap">
+    <table>
+        <thead>
+            <tr>
+                <th class="rowNumber">#</th>
+                @for(column of columns(); track column.name) {
+                    <th [title]="getTitle(column)">{{ column.name }}<span class="type">{{ column.sqlType }}</span></th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for(row of rows(); track $index) {
+                <tr>
+                    <td class="rowNumber">{{ $index + 1 }}</td>
+                    @for(value of row; track $index) {
+                        <td [class.null]="value == null" [class.number]="isNumber(value)">{{ format(value) }}</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if(!rows().length) {
+        <div class="empty">No rows.</div>
+    }
+</div>

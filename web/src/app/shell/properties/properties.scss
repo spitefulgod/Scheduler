@@ -1,0 +1,63 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+    overflow: auto;
+}
+.head {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-3);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+.title {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    border-bottom: 1px solid var(--border);
+}
+.title .icon {
+    font-size: 24px;
+    color: var(--accent);
+}
+.name {
+    font-weight: 600;
+}
+.kind {
+    color: var(--text-faint);
+    font-size: 11px;
+    text-transform: capitalize;
+}
+dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px var(--space-3);
+    margin: 0;
+    padding: var(--space-3);
+}
+dt {
+    color: var(--text-muted);
+}
+dd {
+    margin: 0;
+    word-break: break-word;
+}
+dd.muted {
+    color: var(--text-faint);
+}
+.button {
+    margin: 0 var(--space-3);
+    align-self: flex-start;
+}
+.empty {
+    color: var(--text-muted);
+    padding: var(--space-3);
+    margin: 0;
+}

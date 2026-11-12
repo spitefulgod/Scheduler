@@ -1,0 +1,60 @@
+<div class="doc">
+    <h2>Value scales</h2>
+    <p class="lead">What a matrix cell can hold. Forbidden is a hard no, a penalty costs its weight when the solver uses it, Numeric cells hold numbers, e.g. slots or minutes.</p>
+    @if(error()) {
+        <p class="error">{{ error() }}</p>
+    }
+    <div class="scales">
+        @for(scale of scales(); track scale.id) {
+            <div class="card scale">
+                <div class="title">
+                    <b>{{ scale.name }}</b>
+                    @if(scale.profileId) {
+                        <button type="button" class="button" (click)="edit(scale)"><span class="icon">edit</span>Edit</button>
+                    } @else {
+                        <span class="pill">Built in</span>
+                    }
+                </div>
+                @for(value of scale.values; track value.code) {
+                    <div class="value">
+                        <i [style.background]="value.colour"></i>
+                        <code>{{ value.code }}</code>
+                        <span>{{ value.label }}</span>
+                        <span class="muted">{{ value.meaning }}{{ value.meaning == 'Penalty' ? ' ' + value.weight : '' }}</span>
+                    </div>
+                }
+            </div>
+        }
+        <button type="button" class="card add" (click)="edit(null)"><span class="icon">add</span>New scale</button>
+    </div>
+
+    @if(editing(); as scale) {
+        <div class="card editor">
+            <div class="field">
+                <label for="scaleName">Name</label>
+                <input id="scaleName" [(ngModel)]="scale.name" />
+            </div>
+            <table>
+                <thead><tr><th>Code</th><th>Label</th><th>Means</th><th>Weight</th><th>Colour</th><th></th></tr></thead>
+                <tbody>
+                    @for(value of scale.values; track $index; let i = $index) {
+                        <tr>
+                            <td><input class="code" [(ngModel)]="value.code" maxlength="10" /></td>
+                            <td><input [(ngModel)]="value.label" /></td>
+                            <td><select [(ngModel)]="value.meaning">@for(meaning of meanings; track meaning) { <option [value]="meaning">{{ meaning }}</option> }</select></td>
+                            <td><input type="number" class="weight" [(ngModel)]="value.weight" [disabled]="value.meaning != 'Penalty'" /></td>
+                            <td><input type="color" [(ngModel)]="value.colour" /></td>
+                            <td><button type="button" class="button" (click)="removeValue(scale, i)"><span class="icon">delete</span></button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="actions">
+                <button type="button" class="button" (click)="addValue(scale)"><span class="icon">add</span>Add value</button>
+                <span class="spacer"></span>
+                <button type="button" class="button" (click)="editing.set(null)">Cancel</button>
+                <button type="button" class="button primary" [disabled]="!scale.name.trim() || !scale.values.length" (click)="save()"><span class="icon">save</span>Save</button>
+            </div>
+        </div>
+    }
+</div>

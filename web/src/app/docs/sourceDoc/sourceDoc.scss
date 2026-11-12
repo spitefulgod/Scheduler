@@ -1,0 +1,60 @@
+:host {
+    display: block;
+    height: 100%;
+}
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: 100%;
+    padding: var(--space-4);
+    min-height: 0;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+}
+.pill {
+    margin-right: var(--space-2);
+}
+.pill i {
+    font-style: normal;
+    color: var(--text-faint);
+    margin-left: 4px;
+}
+.actions {
+    display: flex;
+    gap: var(--space-2);
+}
+.columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.sql {
+    margin: 0;
+    padding: var(--space-2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: ui-monospace, Consolas, monospace;
+    white-space: pre-wrap;
+}
+.grid {
+    flex: 1;
+    min-height: 0;
+}
+.muted {
+    color: var(--text-muted);
+}
+.error {
+    color: var(--error);
+}

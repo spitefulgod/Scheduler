@@ -1,0 +1,34 @@
+<div class="wrap">
+    @if(source(); as current) {
+        <header>
+            <div>
+                <h2>{{ current.name }}</h2>
+                <span class="pill">{{ current.kind }}</span>
+                <span class="muted">{{ getDescription(current) }}</span>
+            </div>
+            <div class="actions">
+                <button type="button" class="button" (click)="refreshColumns()"><span class="icon">view_column</span>Refresh columns</button>
+                <button type="button" class="button" (click)="loadPreview()"><span class="icon">refresh</span>Reload preview</button>
+            </div>
+        </header>
+        @if(current.queryText) {
+            <pre class="sql">{{ current.queryText }}</pre>
+        }
+        <div class="columns">
+            @for(column of current.columns; track column.name) {
+                <span class="pill" [title]="column.sqlType">{{ column.name }}<i>{{ column.sqlType }}</i></span>
+            }
+        </div>
+        @if(previewError()) {
+            <p class="error">{{ previewError() }}</p>
+        }
+        @if(preview(); as rows) {
+            <app-data-grid class="grid" [columns]="rows.columns" [rows]="rows.rows" />
+            <span class="muted">{{ rows.rows.length }}{{ rows.truncated ? '+' : '' }} rows shown (read only preview, 200 at most)</span>
+        } @else if(!previewError()) {
+            <p class="muted">Loading preview...</p>
+        }
+    } @else if(error()) {
+        <p class="error">{{ error() }}</p>
+    }
+</div>

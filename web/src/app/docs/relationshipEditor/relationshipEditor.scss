@@ -1,0 +1,260 @@
+:host {
+    display: block;
+    height: 100%;
+}
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: 100%;
+    padding: var(--space-4);
+    min-height: 0;
+    outline: none;
+    overflow: auto;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+}
+h3 {
+    margin: 0 0 var(--space-2);
+    font-size: 13px;
+    font-weight: 600;
+}
+.actions,
+.palette {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    flex-wrap: wrap;
+}
+.spacer {
+    flex: 1;
+}
+.segmented {
+    display: inline-flex;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.segmented button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 0;
+    background: var(--surface);
+    cursor: pointer;
+}
+.segmented button.on {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+.settings {
+    flex: none;
+}
+.grid3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0 var(--space-3);
+}
+.field.check {
+    justify-content: flex-end;
+}
+.field.check label {
+    color: var(--text);
+}
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    background: var(--surface);
+    cursor: pointer;
+}
+.chip i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--chip, var(--text-faint));
+}
+.chip:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.filter,
+.number,
+.list select,
+.list input {
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.filter {
+    width: 160px;
+}
+.number {
+    width: 100px;
+}
+.matrix {
+    flex: 1;
+    min-height: 160px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    user-select: none;
+}
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+th,
+td {
+    height: var(--row-h);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--surface-2);
+    font-weight: 600;
+    cursor: pointer;
+}
+th.corner {
+    left: 0;
+    z-index: 3;
+    padding: 0 var(--space-2);
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+th.column {
+    min-width: 40px;
+    padding: 4px;
+    height: 72px;
+    vertical-align: bottom;
+}
+th.column span {
+    display: inline-block;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: 64px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+th.rowHead {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface-2);
+    text-align: left;
+    padding: 0 var(--space-2);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+th.rowHead span {
+    margin-left: 6px;
+    font-weight: 400;
+    color: var(--text-faint);
+    font-size: 11px;
+}
+td {
+    position: relative;
+    min-width: 40px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: cell;
+    background: color-mix(in srgb, var(--cell, transparent) 28%, var(--surface));
+    color: color-mix(in srgb, var(--cell, var(--text)) 70%, var(--text));
+}
+td.default {
+    font-weight: 400;
+    background: color-mix(in srgb, var(--cell, transparent) 10%, var(--surface));
+    color: var(--text-faint);
+}
+td.typed::after,
+td.edit::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+td.edit::after {
+    background: var(--accent);
+}
+td.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+.list td {
+    text-align: left;
+    padding: 0 var(--space-2);
+    font-weight: 400;
+    color: var(--text);
+    background: var(--surface);
+    cursor: default;
+}
+.list th {
+    text-align: left;
+    padding: 0 var(--space-2);
+}
+.list td.valueCell {
+    background: color-mix(in srgb, var(--cell, transparent) 20%, var(--surface));
+}
+.list tr.add td {
+    background: var(--surface-2);
+}
+.iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+}
+.danger {
+    color: var(--error);
+}
+.hint {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-faint);
+}
+.muted {
+    color: var(--text-muted);
+}
+.warn {
+    margin: 0;
+    color: var(--warn);
+}
+.error {
+    color: var(--error);
+}

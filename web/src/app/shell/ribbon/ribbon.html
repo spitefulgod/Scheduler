@@ -1,0 +1,58 @@
+<div class="titleBar">
+    <div class="quickAccess" role="toolbar" aria-label="Quick access">
+        @for(button of quickAccess; track button.id) {
+            <button type="button" class="quickButton" [disabled]="!commands.isEnabled(button)" [title]="commands.getTooltip(button)" (click)="commands.run(button.id)">
+                <span class="icon">{{ button.icon }}</span>
+            </button>
+        }
+    </div>
+    <div class="title">
+        <span class="appName">Scheduler</span>
+        @if(workspace.profile(); as profile) {
+            <span class="separator">-</span>
+            <span>{{ profile.name }}</span>
+        }
+    </div>
+    <div class="spacer"></div>
+</div>
+
+<div class="tabs" role="tablist">
+    @for(item of tabs; track item.id) {
+        <button type="button" role="tab" class="tab" [class.active]="item.id == activeTab()" [attr.aria-selected]="item.id == activeTab()"
+            (click)="selectTab(item.id)" (dblclick)="toggleCollapsed()">{{ item.label }}</button>
+    }
+    <div class="spacer"></div>
+    <button type="button" class="collapse" [title]="workspace.ribbonCollapsed() ? 'Expand ribbon' : 'Collapse ribbon'" (click)="toggleCollapsed()">
+        <span class="icon">{{ workspace.ribbonCollapsed() ? 'expand_more' : 'expand_less' }}</span>
+    </button>
+</div>
+
+@if(!workspace.ribbonCollapsed()) {
+    <div class="panel" role="tabpanel">
+        @for(group of tab().groups; track group.label) {
+            <div class="group">
+                <div class="buttons">
+                    @for(button of getLarge(group); track button.id) {
+                        <button type="button" class="largeButton" [class.on]="commands.isActive(button)" [disabled]="!commands.isEnabled(button)"
+                            [title]="commands.getTooltip(button)" (click)="commands.run(button.id)">
+                            <span class="icon">{{ button.icon }}</span>
+                            <span class="label">{{ button.label }}</span>
+                        </button>
+                    }
+                    @for(column of getSmallColumns(group); track $index) {
+                        <div class="stack">
+                            @for(button of column; track button.id) {
+                                <button type="button" class="smallButton" [class.on]="commands.isActive(button)" [disabled]="!commands.isEnabled(button)"
+                                    [title]="commands.getTooltip(button)" (click)="commands.run(button.id)">
+                                    <span class="icon">{{ button.icon }}</span>
+                                    <span>{{ button.label }}</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="groupLabel">{{ group.label }}</div>
+            </div>
+        }
+    </div>
+}

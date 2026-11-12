@@ -1,0 +1,34 @@
+<div class="doc">
+    <h2>{{ workspace.profile()?.name ?? 'Welcome to Scheduler' }}</h2>
+    <p class="lead">{{ workspace.profile()?.description ?? 'Create a profile to set up the entities, setup data and rules for a process.' }}</p>
+
+    <div class="grid">
+        <div class="card actions">
+            <h3>Get started</h3>
+            <button type="button" class="button" (click)="commands.run('profile.new')"><span class="icon">note_add</span>New profile</button>
+            <button type="button" class="button" (click)="commands.run('profile.open')"><span class="icon">folder_open</span>Open profile</button>
+            <button type="button" class="button" (click)="commands.run('connection.new')"><span class="icon">add_link</span>New connection</button>
+            <button type="button" class="button" [disabled]="!workspace.profile()" (click)="commands.run('source.add')"><span class="icon">travel_explore</span>Browse sources</button>
+        </div>
+
+        @if(workspace.profile()) {
+            <div class="card">
+                <h3>This profile</h3>
+                <ul class="counts">
+                    @for(folder of workspace.navigator(); track folder.id) {
+                        <li><span class="icon">{{ folder.icon }}</span>{{ folder.label }}<b>{{ folder.children?.length ?? 0 }}</b></li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="card">
+            <h3>Milestones</h3>
+            <ol class="milestones">
+                @for(milestone of milestones; track milestone.number) {
+                    <li [class.done]="milestone.done"><span class="icon">{{ milestone.done ? 'check_circle' : 'radio_button_unchecked' }}</span>{{ milestone.text }}</li>
+                }
+            </ol>
+        </div>
+    </div>
+</div>

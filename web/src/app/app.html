@@ -1,0 +1,20 @@
+<app-ribbon />
+<main [class.noNav]="!workspace.showNavigator()" [class.noProps]="!workspace.showProperties()">
+    @if(workspace.showNavigator()) {
+        <app-navigator class="nav" />
+    }
+    <app-doc-host class="docs" />
+    @if(workspace.showProperties()) {
+        <app-properties class="props" />
+    }
+</main>
+<app-status-bar />
+
+<div class="toasts" aria-live="polite">
+    @for(toast of workspace.toasts(); track toast.id) {
+        <div class="toast" [class]="toast.tone">
+            <span class="icon">{{ getToastIcon(toast.tone) }}</span>
+            {{ toast.text }}
+        </div>
+    }
+</div>

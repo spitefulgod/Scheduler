@@ -1,0 +1,212 @@
+/* Theme tokens. One accent colour, neutral surfaces, 4/8px grid. */
+:root {
+    --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-soft: #e8efff;
+    --on-accent: #ffffff;
+
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --surface-hover: #eef1f5;
+    --border: #dde1e7;
+    --border-strong: #c4cad3;
+    --text: #1f2933;
+    --text-muted: #5f6b7a;
+    --text-faint: #8a95a3;
+
+    --ok: #1f8a4c;
+    --ok-soft: #e3f4ea;
+    --error: #c62828;
+    --error-soft: #fdeaea;
+    --warn: #b26a00;
+
+    --radius: 4px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --row-h: 28px;
+    --ribbon-btn-lg: 64px;
+    --font-size: 13px;
+
+    color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+    --accent: #5b8cff;
+    --accent-hover: #7aa2ff;
+    --accent-soft: #1f2a44;
+    --on-accent: #0b1020;
+
+    --bg: #16181d;
+    --surface: #1e2128;
+    --surface-2: #23262e;
+    --surface-hover: #2b2f38;
+    --border: #323742;
+    --border-strong: #444b58;
+    --text: #e4e7ec;
+    --text-muted: #a3acb9;
+    --text-faint: #737d8c;
+
+    --ok: #4cc283;
+    --ok-soft: #173326;
+    --error: #ff6b6b;
+    --error-soft: #3a1d1f;
+    --warn: #e0a040;
+
+    color-scheme: dark;
+}
+
+:root[data-density='compact'] {
+    --row-h: 24px;
+    --ribbon-btn-lg: 56px;
+    --font-size: 12px;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: var(--font-size);
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+.icon {
+    font-family: 'Material Symbols Outlined';
+    font-weight: 300;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    direction: ltr;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Shared form controls */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+}
+.field label {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.field input,
+.field select,
+.field textarea {
+    height: 32px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.field textarea {
+    height: auto;
+    min-height: 96px;
+    padding: var(--space-2);
+    font-family: ui-monospace, Consolas, monospace;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: 2px solid var(--accent-soft);
+    border-color: var(--accent);
+}
+.field .hint {
+    color: var(--text-faint);
+    font-size: 11px;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: 30px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+}
+.button:hover:not(:disabled) {
+    background: var(--surface-hover);
+}
+.button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+.button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+}
+.button.primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+.button .icon {
+    font-size: 16px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    background: var(--surface-hover);
+    color: var(--text-muted);
+}
+.pill.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+}
+.pill.error {
+    background: var(--error-soft);
+    color: var(--error);
+}
+
+.doc {
+    padding: var(--space-4);
+    overflow: auto;
+    height: 100%;
+}
+.doc h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 var(--space-1);
+}
+.doc .lead {
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+}
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+}

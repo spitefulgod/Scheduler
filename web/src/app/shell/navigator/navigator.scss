@@ -1,0 +1,113 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    padding: 0 var(--space-2) 0 var(--space-3);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+.iconButton {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--radius);
+    width: 24px;
+    height: 24px;
+    color: var(--text-muted);
+}
+.iconButton:hover {
+    background: var(--surface-hover);
+}
+
+.search {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 var(--space-2) var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 6px;
+    background: var(--surface-2);
+    .icon {
+        font-size: 16px;
+        color: var(--text-faint);
+    }
+    input {
+        border: 0;
+        outline: 0;
+        background: transparent;
+        height: 26px;
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+.tree {
+    flex: 1;
+    overflow: auto;
+    padding-bottom: var(--space-2);
+}
+.empty {
+    color: var(--text-muted);
+    padding: var(--space-3);
+    margin: 0;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: var(--row-h);
+    padding-right: var(--space-2);
+    cursor: default;
+    white-space: nowrap;
+    outline: none;
+    &:hover {
+        background: var(--surface-hover);
+    }
+    &.selected {
+        background: var(--accent-soft);
+        color: var(--accent);
+    }
+    &:focus-visible {
+        box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    &.folder .label {
+        font-weight: 600;
+    }
+}
+.twisty {
+    width: 16px;
+    font-size: 16px;
+    color: var(--text-faint);
+    cursor: pointer;
+    flex: none;
+}
+.kind {
+    font-size: 16px;
+    color: var(--text-muted);
+    flex: none;
+}
+.row.selected .kind {
+    color: var(--accent);
+}
+.label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.count {
+    color: var(--text-faint);
+    font-size: 11px;
+}

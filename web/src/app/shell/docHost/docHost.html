@@ -1,0 +1,63 @@
+<div class="tabs" role="tablist">
+    @for(doc of workspace.docs(); track doc.id) {
+        <div class="tab" role="tab" [class.active]="doc.id == workspace.activeDocId()" [attr.aria-selected]="doc.id == workspace.activeDocId()" [title]="doc.title"
+            (click)="workspace.activeDocId.set(doc.id)" (auxclick)="workspace.closeDoc(doc.id)">
+            <span class="icon">{{ doc.icon }}</span>
+            <span class="tabTitle">{{ doc.title }}</span>
+            <button type="button" class="close" aria-label="Close tab" (click)="close($event, doc.id)"><span class="icon">close</span></button>
+        </div>
+    }
+</div>
+<div class="body">
+    @for(doc of workspace.docs(); track doc.id) {
+        <div class="pane" [hidden]="doc.id != workspace.activeDocId()">
+            @switch(doc.kind) {
+                @case('welcome') {
+                    <app-welcome-page />
+                }
+                @case('profile') {
+                    <app-profile-editor [doc]="doc" />
+                }
+                @case('openProfile') {
+                    <app-open-profile [doc]="doc" />
+                }
+                @case('connection') {
+                    <app-connection-wizard [doc]="doc" />
+                }
+                @case('sourceBrowser') {
+                    <app-source-browser [doc]="doc" />
+                }
+                @case('source') {
+                    <app-source-doc [doc]="doc" />
+                }
+                @case('schedule') {
+                    <app-schedule-doc [doc]="doc" />
+                }
+                @case('entity') {
+                    <app-entity-editor [doc]="doc" />
+                }
+                @case('relationship') {
+                    <app-relationship-editor [doc]="doc" />
+                }
+                @case('calendar') {
+                    <app-calendar-editor [doc]="doc" />
+                }
+                @case('rule') {
+                    <app-rule-editor [doc]="doc" />
+                }
+                @case('scales') {
+                    <app-value-scales />
+                }
+                @case('solveSettings') {
+                    <app-solve-settings />
+                }
+                @case('object') {
+                    <app-object-doc [doc]="doc" />
+                }
+            }
+        </div>
+    }
+    @if(!workspace.docs().length) {
+        <div class="none">Double click an item in the navigator to open it.</div>
+    }
+</div>

@@ -1,0 +1,33 @@
+<div class="doc">
+    @if(node(); as current) {
+        <h2><span class="icon">{{ current.icon }}</span> {{ current.label }}</h2>
+        <p class="lead">{{ current.kind | titlecase }}{{ milestone() ? ', its editor arrives in milestone ' + milestone() : '' }}</p>
+        <div class="card">
+            <dl>
+                @for(row of rows(); track row[0]) {
+                    <dt>{{ row[0] }}</dt>
+                    <dd>{{ row[1] ?? '-' }}</dd>
+                }
+            </dl>
+        </div>
+        @if(current.children?.length) {
+            <h3>Contents</h3>
+            <div class="card">
+                <table>
+                    <tbody>
+                        @for(child of current.children; track child.id) {
+                            <tr>
+                                <td><span class="icon">{{ child.icon }}</span> {{ child.label }}</td>
+                                @for(value of getValues(child); track $index) {
+                                    <td>{{ value ?? '' }}</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    } @else {
+        <p class="lead">This item isn't there any more.</p>
+    }
+</div>

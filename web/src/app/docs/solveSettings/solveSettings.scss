@@ -1,0 +1,10 @@
+:host {
+    display: block;
+    height: 100%;
+}
+.form {
+    max-width: 520px;
+}
+.field.check label {
+    color: var(--text);
+}

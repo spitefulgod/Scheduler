@@ -1,0 +1,72 @@
+<div class="scroller" #scroller (click)="onBackgroundClick()">
+    <div class="canvas" [style.width.px]="labelWidth + width()" [style.height.px]="header + totalHeight()">
+        <div class="head">
+            <div class="corner">Resource</div>
+            <div class="axis" [style.width.px]="width()">
+                @for(tick of ticks(); track tick.left) {
+                    <span class="tick" [class.major]="tick.major" [style.left.px]="tick.left">{{ tick.label }}</span>
+                }
+            </div>
+        </div>
+        <div class="lanes" [style.top.px]="header" [style.height.px]="totalHeight()">
+            <div class="labels">
+                @for(lane of lanes(); track lane.key) {
+                    <div class="laneLabel" [style.top.px]="lane.top" [style.height.px]="lane.height" [title]="lane.label">
+                        <b>{{ lane.key }}</b><span>{{ lane.label == lane.key ? '' : lane.label }}</span>
+                    </div>
+                }
+            </div>
+            <div class="track" [style.width.px]="width()">
+                @for(lane of lanes(); track lane.key) {
+                    <div class="lane" [style.top.px]="lane.top" [style.height.px]="lane.height" [class.dropTarget]="drag()?.moved && drag()?.laneKey == lane.key">
+                        @for(down of lane.down; track $index) {
+                            <div class="down" [class.emergency]="down.emergency" [style.left.px]="down.left" [style.width.px]="down.width" [title]="down.title"></div>
+                        }
+                        @for(config of lane.configs; track $index) {
+                            <div class="config" [style.left.px]="config.left" [style.width.px]="config.width" [title]="config.title">
+                                @if(config.width > 24) {
+                                    <span>{{ config.label }}</span>
+                                }
+                            </div>
+                        }
+                        @for(bar of lane.bars; track bar.assignment.id) {
+                            <div class="bar" [style.left.px]="bar.left" [style.width.px]="bar.width" [style.top.px]="lane.barTop + bar.row * 24" [style.background-color]="bar.colour"
+                                [class.fixed]="bar.assignment.fixed" [class.late]="bar.late" [class.moved]="bar.moved" [class.selected]="bar.assignment.itemKey == selectedKey()"
+                                [class.dragging]="drag()?.assignment?.id == bar.assignment.id && drag()?.moved" [title]="bar.title"
+                                (pointerdown)="onBarDown($event, bar, lane)" (pointermove)="onBarMove($event)" (pointerup)="onBarUp($event)" (click)="$event.stopPropagation()">
+                                @if(bar.assignment.setupMinutes > 0) {
+                                    <span class="setup" [style.width.px]="bar.assignment.setupMinutes / 60 * hourWidth()"></span>
+                                }
+                                @for(tick of bar.ticks; track $index) {
+                                    <span class="inspection" [class.first]="tick.kind != 'Periodic'" [style.left.px]="tick.left" [title]="tick.title"></span>
+                                }
+                                @if(bar.width > 28) {
+                                    <span class="text">{{ bar.label }}@if(bar.assignment.toolCount > 1) { <i>x{{ bar.assignment.toolCount }}</i> }</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                @if(drag(); as current) {
+                    @if(current.moved) {
+                        <div class="ghost" [style.left.px]="current.left" [style.top.px]="current.top" [style.width.px]="current.width"></div>
+                    }
+                }
+                @if(lockX() !== null) {
+                    <div class="locked" [style.width.px]="lockX()" title="Locked, a new run leaves this alone"></div>
+                }
+                @if(nowX() !== null) {
+                    <div class="now" [style.left.px]="nowX()" title="Now"></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@if(legend().length) {
+    <div class="legend">
+        <span class="muted">{{ colourBy() }}:</span>
+        @for(item of legend(); track item.value) {
+            <span class="key"><i [style.background]="item.colour"></i>{{ item.value }}</span>
+        }
+    </div>
+}
