@@ -12,6 +12,8 @@ export class CommandService {
     isEnabled(button : IRibbonButton) : boolean {
         if(button.milestone)
             return false;
+        if(!this.isAllowed(button.id))
+            return false;
         switch(button.id) {
             // changes are saved as they're made, until documents know when they've been changed
             case 'profile.save':
@@ -42,6 +44,41 @@ export class CommandService {
                 return true;
         }
     }
+    // What the user's roles let them use, the API refuses the rest anyway
+    isAllowed(commandId : string) : boolean {
+        const workspace = this.workspace;
+        const rights = workspace.rights();
+        const area = commandId.split('.')[0];
+        switch(commandId) {
+            case 'profile.new':
+                return workspace.user()?.siteOwner == true;
+            case 'profile.open':
+                return true;
+            case 'profile.properties':
+            case 'profile.validate':
+            case 'rule.conflicts':
+                return rights.readModel;
+            case 'security.users':
+                return workspace.canManageUsers();
+            case 'solve.gantt':
+            case 'solve.table':
+                return rights.viewSchedule;
+        }
+        switch(area) {
+            case 'connection':
+                return workspace.user()?.designer == true;
+            case 'source':
+            case 'entity':
+            case 'relationship':
+            case 'calendar':
+            case 'rule':
+                return rights.editModel;
+            case 'solve':
+                return rights.solve;
+            default:
+                return true;
+        }
+    }
     isActive(button : IRibbonButton) : boolean {
         switch(button.id) {
             case 'view.navigator':
@@ -50,8 +87,10 @@ export class CommandService {
                 return this.workspace.showProperties();
             case 'view.density':
                 return this.workspace.density() == 'compact';
-            case 'view.theme':
-                return this.workspace.theme() == 'dark';
+            case 'view.sidebar':
+                return this.workspace.sidebarCollapsed();
+            case 'view.propertiesCollapsed':
+                return this.workspace.propertiesCollapsed();
             default:
                 return false;
         }
@@ -61,6 +100,8 @@ export class CommandService {
             return button.milestone > 7 ? `${button.label}, not in the proof of concept yet` : `${button.label}, coming in milestone ${button.milestone}`;
         if(button.id == 'profile.save')
             return 'Changes are saved as they are made';
+        if(!button.milestone && !this.isAllowed(button.id))
+            return `${button.label}, your role doesn't allow it`;
         return button.label;
     }
 
@@ -248,8 +289,16 @@ export class CommandService {
                 case 'view.density':
                     workspace.density.update(x => x == 'compact' ? 'comfortable' : 'compact');
                     break;
-                case 'view.theme':
-                    workspace.theme.update(x => x == 'dark' ? 'light' : 'dark');
+                case 'view.sidebar':
+                    workspace.toggleSidebar();
+                    break;
+                case 'view.propertiesCollapsed':
+                    if(!workspace.showProperties())
+                        workspace.showProperties.set(true);
+                    workspace.toggleProperties();
+                    break;
+                case 'security.users':
+                    workspace.openDoc({ id : 'users', kind : 'users', title : 'Users & roles', icon : 'admin_panel_settings', params : {} });
                     break;
             }
         }

@@ -22,20 +22,23 @@
                 <div class="line muted">Nothing has been published yet. Solve to make a plan.</div>
             }
         </div>
-        <div class="actions">
-            @if(isRunning()) {
-                <button type="button" class="button" (click)="stop()"><span class="icon">stop</span>Stop, keep the best so far</button>
-            } @else {
-                <button type="button" class="button primary" [disabled]="busy()" (click)="start('Solve')"><span class="icon">play_arrow</span>Solve</button>
-                <button type="button" class="button" [disabled]="busy() || !moves().length" (click)="start('WhatIf')" title="Plan again with the bars you moved where you put them">
-                    <span class="icon">alt_route</span>What-if ({{ moves().length }})</button>
-                <button type="button" class="button" [disabled]="busy() || !run()?.details" (click)="openEmergency()"><span class="icon">emergency</span>Resource down</button>
-            }
-            @if(canDecide()) {
-                <button type="button" class="button primary" [disabled]="busy()" (click)="publish()"><span class="icon">check</span>Accept and publish</button>
-                <button type="button" class="button" [disabled]="busy()" (click)="discard()"><span class="icon">close</span>Discard</button>
-            }
-        </div>
+        <!-- readers see the schedule, only owners and solvers work it -->
+        @if(workspace.rights().solve) {
+            <div class="actions">
+                @if(isRunning()) {
+                    <button type="button" class="button" (click)="stop()"><span class="icon">stop</span>Stop, keep the best so far</button>
+                } @else {
+                    <button type="button" class="button primary" [disabled]="busy()" (click)="start('Solve')"><span class="icon">play_arrow</span>Solve</button>
+                    <button type="button" class="button" [disabled]="busy() || !moves().length" (click)="start('WhatIf')" title="Plan again with the bars you moved where you put them">
+                        <span class="icon">alt_route</span>What-if ({{ moves().length }})</button>
+                    <button type="button" class="button" [disabled]="busy() || !run()?.details" (click)="openEmergency()"><span class="icon">emergency</span>Resource down</button>
+                }
+                @if(canDecide()) {
+                    <button type="button" class="button primary" [disabled]="busy()" (click)="publish()"><span class="icon">check</span>Accept and publish</button>
+                    <button type="button" class="button" [disabled]="busy()" (click)="discard()"><span class="icon">close</span>Discard</button>
+                }
+            </div>
+        }
     </header>
 
     @if(error()) {
@@ -213,9 +216,9 @@
                                         }
                                     </div>
                                 }
-                                @if(!isItemLocked(first.itemKey)) {
+                                @if(!isItemLocked(first.itemKey) && workspace.rights().solve) {
                                     <button type="button" class="button block" (click)="lockItem(first.itemKey)"><span class="icon">lock</span>Lock where it is</button>
-                                } @else {
+                                } @else if(isItemLocked(first.itemKey)) {
                                     <p class="muted"><span class="icon small">lock</span> Locked, runs leave it where it is.</p>
                                 }
                             } @else {
@@ -253,17 +256,19 @@
                         }
                         @case('locks') {
                             <p class="muted">Locked work stays where it is when a run plans again. Work already started is always locked.</p>
-                            <div class="lockForm">
-                                <label>Lock the next <input type="number" min="1" max="2000" [(ngModel)]="lockHours" /> hours</label>
-                                <input placeholder="Reason" [(ngModel)]="lockReason" />
-                                <div class="quick">
-                                    <button type="button" class="button" (click)="lockHours = 1; addWindowLock()">Hour</button>
-                                    <button type="button" class="button" (click)="lockHours = 24; addWindowLock()">Day</button>
-                                    <button type="button" class="button" (click)="lockHours = 168; addWindowLock()">Week</button>
-                                    <button type="button" class="button" (click)="lockHours = 720; addWindowLock()">Month</button>
-                                    <button type="button" class="button primary" (click)="addWindowLock()"><span class="icon">lock</span>Lock</button>
+                            @if(workspace.rights().solve) {
+                                <div class="lockForm">
+                                    <label>Lock the next <input type="number" min="1" max="2000" [(ngModel)]="lockHours" /> hours</label>
+                                    <input placeholder="Reason" [(ngModel)]="lockReason" />
+                                    <div class="quick">
+                                        <button type="button" class="button" (click)="lockHours = 1; addWindowLock()">Hour</button>
+                                        <button type="button" class="button" (click)="lockHours = 24; addWindowLock()">Day</button>
+                                        <button type="button" class="button" (click)="lockHours = 168; addWindowLock()">Week</button>
+                                        <button type="button" class="button" (click)="lockHours = 720; addWindowLock()">Month</button>
+                                        <button type="button" class="button primary" (click)="addWindowLock()"><span class="icon">lock</span>Lock</button>
+                                    </div>
                                 </div>
-                            </div>
+                            }
                             @for(item of locks(); track item.id) {
                                 <div class="move">
                                     <span>
@@ -275,7 +280,7 @@
                                         }
                                         @if(item.reason) { <span class="muted">, {{ item.reason }}</span> }
                                     </span>
-                                    <button type="button" class="iconButton" title="Unlock" (click)="deleteLock(item.id)"><span class="icon">lock_open</span></button>
+                                    <button type="button" class="iconButton" title="Unlock" [disabled]="!workspace.rights().solve" (click)="deleteLock(item.id)"><span class="icon">lock_open</span></button>
                                 </div>
                             } @empty {
                                 <p class="muted">Nothing is locked.</p>

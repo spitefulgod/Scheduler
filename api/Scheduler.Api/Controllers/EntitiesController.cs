@@ -8,6 +8,7 @@ namespace Scheduler.Api.Controllers
     // A profile's entity types, e.g. Job, Press, Tool, and their attributes mapped onto source columns with a role each
     [Route("api/profiles/{profileId}/entities")]
     [ApiController]
+    [ProfileAccess(Access.ReadModel, Access.EditModel)]
     public class EntitiesController : BaseController
     {
         private readonly ISourceSecrets _secrets;

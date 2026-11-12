@@ -9,6 +9,7 @@ namespace Scheduler.Api.Controllers
     // the password is encrypted here before it's saved and never sent back, the client only learns whether there is one
     [Route("api/connections")]
     [ApiController]
+    [ProfileAccess(Access.Designer)]
     public class ConnectionsController : BaseController
     {
         private readonly ISourceSecrets _secrets;

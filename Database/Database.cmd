@@ -77,7 +77,7 @@ for /f "delims=" %%f in ('dir /b /on Updates\*.sql') do (
 )
 if "%RAN%"=="0" echo No updates to run
 rem the functions, procedures and built in lookup data are put in again so they always match the scripts
-for %%f in (02_Functions.sql 03_Procedures_Profiles.sql 04_Procedures_Connections.sql 05_Procedures_Sources.sql 06_Procedures_Catalogue.sql 10_Procedures_Model.sql 11_Procedures_Schedule.sql 07_Seed_Catalogue.sql) do (
+for %%f in (02_Functions.sql 03_Procedures_Profiles.sql 04_Procedures_Connections.sql 05_Procedures_Sources.sql 06_Procedures_Catalogue.sql 10_Procedures_Model.sql 11_Procedures_Schedule.sql 12_Procedures_Security.sql 07_Seed_Catalogue.sql) do (
     call :run "%%f" || goto failed
 )
 

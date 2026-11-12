@@ -1,0 +1,56 @@
+<div class="brand">
+    <button type="button" class="brandMark toggle" [title]="workspace.sidebarCollapsed() ? 'Expand the menu' : 'Collapse the menu'"
+        [attr.aria-expanded]="!workspace.sidebarCollapsed()" (click)="workspace.toggleSidebar()"><span class="icon">view_timeline</span></button>
+    <div class="label">
+        <div class="brandName">Scheduler</div>
+        <div class="brandSub">Production planning</div>
+    </div>
+</div>
+
+<div class="navGroup">
+    <div class="navLabel">Profiles</div>
+    @for(profile of workspace.profiles(); track profile.id) {
+        <button type="button" class="navItem" [class.active]="profile.id == workspace.profileId()" [title]="workspace.sidebarCollapsed() ? profile.name : ''"
+            (click)="openProfile(profile.id)">
+            <span class="icon">tune</span> <span class="label">{{ profile.name }}</span>
+        </button>
+    } @empty {
+        <div class="navEmpty label">No profiles shared with you yet</div>
+    }
+</div>
+
+@if(workspace.rights().viewSchedule || workspace.canManageUsers()) {
+    <div class="navGroup">
+        <div class="navLabel">Plan</div>
+        @if(workspace.rights().viewSchedule) {
+            <button type="button" class="navItem" [class.active]="workspace.activeDoc()?.kind == 'schedule'" [title]="workspace.sidebarCollapsed() ? 'Schedule' : ''"
+                (click)="run('solve.gantt')">
+                <span class="icon">view_timeline</span> <span class="label">Schedule</span>
+            </button>
+        }
+        @if(workspace.rights().solve) {
+            <button type="button" class="navItem" [class.active]="workspace.activeDoc()?.kind == 'solveSettings'" [title]="workspace.sidebarCollapsed() ? 'Solve settings' : ''"
+                (click)="run('solve.settings')">
+                <span class="icon">settings</span> <span class="label">Solve settings</span>
+            </button>
+        }
+        @if(workspace.canManageUsers()) {
+            <button type="button" class="navItem" [class.active]="workspace.activeDoc()?.kind == 'users'" [title]="workspace.sidebarCollapsed() ? 'Users & roles' : ''"
+                (click)="run('security.users')">
+                <span class="icon">admin_panel_settings</span> <span class="label">Users &amp; roles</span>
+            </button>
+        }
+    </div>
+}
+
+@if(workspace.user(); as user) {
+    <div class="me">
+        <div class="person" [title]="user.userName + (user.email ? ' · ' + user.email : '')">
+            <div class="avatar">{{ user.initials }}</div>
+            <div class="who label">
+                <div class="name">{{ user.displayName }}</div>
+                <div class="email">{{ roleLabel() }}</div>
+            </div>
+        </div>
+    </div>
+}

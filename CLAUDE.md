@@ -106,14 +106,18 @@ run setting; always return the best solution found.
   - Setup: New Matrix, New List, Value Scales | Import from Source | Calendars
   - Rules: New Rule, Duplicate, Enable/Disable | Check Conflicts
   - Schedule: Solve, Stop, Settings | Gantt, Table | Export to Meta
-  - View: Navigator, Properties, Density (comfortable/compact), Theme (light/dark)
-- **Layout:** left **Navigator** tree (Connections, Sources, Entities, Relationships,
+  - View: Navigator, Properties, Density (comfortable/compact), Collapse sidebar, Collapse properties
+  - Home also has Users & Roles (Security)
+- **Layout:** the Recommit upload site's dark **navigation sidebar** on the far left (brand mark collapses it, profiles,
+  Schedule, Solve settings, Users & roles, the signed in user at the bottom), then the left **Navigator** tree (Connections, Sources, Entities, Relationships,
   Calendars, Rules, Runs), central **document area** with tabs, right **Properties**
-  panel for the selected object, bottom **status bar** (connection state, validation
+  panel for the selected object (collapses to a strip, remembered per user), bottom **status bar** (connection state, validation
   count, last solve).
 - **Look:** neutral surfaces, one accent colour, 4/8px spacing grid, Segoe UI / system
   font stack, line icons (Material Symbols Outlined or Lucide), subtle borders rather
-  than heavy shadows, light and dark themes via CSS variables.
+  than heavy shadows, one light look (no theme switch) with the Recommit upload site's tokens in `styles.scss`.
+- **Security:** Windows domain sign in, roles Site owner, Project owner, Project reader, Project solver (see README).
+  Every API action needs a `[ProfileAccess]`; a solver only reaches the schedule.
 - **Key screens:**
   - Connection wizard: provider → server/db/auth → Test → save. Show green/red status.
   - Source browser: schema tree of tables/views with search, data preview grid (top 200).

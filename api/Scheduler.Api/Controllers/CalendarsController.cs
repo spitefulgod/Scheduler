@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Scheduler.Api.Services;
 using System.Text.Json;
 
 namespace Scheduler.Api.Controllers
@@ -6,6 +7,7 @@ namespace Scheduler.Api.Controllers
     // Working time: weekly shifts and exceptions, a resource's calendar takes on its parent's, e.g. the site's shutdown
     [Route("api/profiles/{profileId}/calendars")]
     [ApiController]
+    [ProfileAccess(Access.ReadModel, Access.EditModel)]
     public class CalendarsController : BaseController
     {
         public CalendarsController(IConfiguration configuration) : base(configuration)

@@ -507,6 +507,46 @@ export interface IProfileSettings {
     [name : string] : unknown;
 }
 
+// What the signed in user can do in one profile
+export interface IProfileRights {
+    profileId : string;
+    readModel : boolean;
+    editModel : boolean;
+    viewSchedule : boolean;
+    solve : boolean;
+    manageUsers : boolean;
+}
+// The user's own screen settings, kept on the server so they follow the user
+export interface IUserSettings {
+    propertiesCollapsed? : boolean;
+    sidebarCollapsed? : boolean;
+    [name : string] : unknown;
+}
+// The signed in Windows user (GET api/user/login), as in Recommit, with what they can do
+export interface ILogin {
+    id : string | null;
+    userName : string;
+    displayName : string;
+    initials : string;
+    email : string | null;
+    siteOwner : boolean;
+    // a site owner or the owner of any profile, they can set up connections
+    designer : boolean;
+    profiles : IProfileRights[];
+    settings : IUserSettings;
+}
+export type UserRole = 'SiteOwner' | 'ProjectOwner' | 'ProjectReader' | 'ProjectSolver';
+// A role given to a domain user or group
+export interface IUserRole {
+    id : string;
+    userName : string;
+    profileId : string | null;
+    profileName : string | null;
+    role : UserRole;
+    created : string;
+    createdBy : string | null;
+}
+
 // The API's endpoints, every call goes through callApi
 @Injectable({ providedIn : 'root' })
 export class SchedulerApi {
@@ -516,20 +556,51 @@ export class SchedulerApi {
         try {
             response = await fetch(`${environment.api.url}${path}`, {
                 method : method,
+                // the Windows sign in goes with every call
+                credentials : 'include',
                 headers : body === undefined ? {} : { 'Content-Type' : 'application/json' },
                 body : body === undefined ? undefined : JSON.stringify(body)
             });
         }
         catch(e) {
-            throw new Error(`The Scheduler API isn't reachable at ${environment.api.url}`);
+            throw new ApiError(`The Scheduler API isn't reachable at ${environment.api.url}`, 0);
         }
         if(!response.ok)
-            throw new Error(await response.text() || `The API call failed (${response.status})`);
+            throw new ApiError(await response.text() || `The API call failed (${response.status})`, response.status);
         return await response.json() as T;
     }
 
     getStatus() : Promise<IStatus> {
         return this.callApi<IStatus>('/api/status');
+    }
+    // Logs in with the Windows sign in, once at the start
+    login() : Promise<ILogin> {
+        return this.callApi<ILogin>('/api/user/login');
+    }
+    saveUserSettings(settings : IUserSettings) : Promise<IUserSettings> {
+        return this.callApi<IUserSettings>('/api/user/settings', 'PUT', settings);
+    }
+    getSiteOwners() : Promise<IUserRole[]> {
+        return this.callApi<IUserRole[]>('/api/site-owners');
+    }
+    addSiteOwner(userName : string) : Promise<IUserRole[]> {
+        return this.callApi<IUserRole[]>('/api/site-owners', 'POST', { userName : userName });
+    }
+    deleteSiteOwner(userRoleId : string) : Promise<IUserRole[]> {
+        return this.callApi<IUserRole[]>(`/api/site-owners/${userRoleId}`, 'DELETE');
+    }
+    getProfileUsers(profileId : string) : Promise<IUserRole[]> {
+        return this.callApi<IUserRole[]>(`/api/profiles/${profileId}/users`);
+    }
+    addProfileUser(profileId : string, userName : string, role : UserRole) : Promise<IUserRole[]> {
+        return this.callApi<IUserRole[]>(`/api/profiles/${profileId}/users`, 'POST', { userName : userName, role : role });
+    }
+    deleteProfileUser(profileId : string, userRoleId : string) : Promise<IUserRole[]> {
+        return this.callApi<IUserRole[]>(`/api/profiles/${profileId}/users/${userRoleId}`, 'DELETE');
+    }
+    // The item attribute names for the Gantt's colour and label, without the model behind them
+    getScheduleAttributes(profileId : string) : Promise<string[]> {
+        return this.callApi<string[]>(`/api/profiles/${profileId}/schedule/attributes`);
     }
     getRuleTypes() : Promise<IRuleType[]> {
         return this.callApi<IRuleType[]>('/api/rule-types');
@@ -727,6 +798,12 @@ export class SchedulerApi {
 }
 
 // An error's message, for showing on screen
+// A failed call, status is 0 when the API couldn't be reached
+export class ApiError extends Error {
+    constructor(message : string, public readonly status : number) {
+        super(message);
+    }
+}
 export function getErrorMessage(e : unknown) : string {
     return e instanceof Error ? e.message : String(e);
 }

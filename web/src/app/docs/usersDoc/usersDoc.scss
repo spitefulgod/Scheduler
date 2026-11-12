@@ -1,0 +1,58 @@
+:host {
+    display: block;
+    height: 100%;
+}
+.doc {
+    max-width: 960px;
+}
+section {
+    padding: 0;
+    margin-bottom: var(--space-4);
+    overflow: hidden;
+}
+.sectionHead {
+    padding: var(--space-4) var(--space-4) var(--space-2);
+    h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+    p {
+        margin: 2px 0 0;
+    }
+}
+.roleKey {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 var(--space-4) var(--space-3);
+    color: var(--text-muted);
+    .pill {
+        min-width: 104px;
+        justify-content: center;
+        margin-right: var(--space-2);
+    }
+}
+.add {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    .field {
+        margin: 0;
+    }
+    .grow {
+        flex: 1;
+    }
+    .button {
+        height: 34px;
+    }
+}
+.table {
+    border-top: 1px solid var(--border);
+}
+.muted {
+    color: var(--text-faint);
+}

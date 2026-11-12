@@ -7,6 +7,7 @@ namespace Scheduler.Api.Controllers
     // Solving and the plan: runs (solve, what-if, emergency), publishing or discarding them, and the locks on the published plan
     [Route("api/profiles/{profileId}/schedule")]
     [ApiController]
+    [ProfileAccess(Access.ViewSchedule, Access.Solve)]
     public class ScheduleController : BaseController
     {
         private readonly SolveService _solver;
@@ -89,6 +90,31 @@ namespace Scheduler.Api.Controllers
         public IActionResult DeleteLock(string profileId, string lockId)
         {
             return RunSP("DeletePlanLock", profileId, lockId);
+        }
+
+        // The item attribute names, for colouring and labelling the Gantt, without the rest of the model a solver can't see
+        [HttpGet("attributes")]
+        public IActionResult GetAttributes(string profileId)
+        {
+            try
+            {
+                List<string> names = new List<string>();
+                JsonElement entities = SchedulerDb.RunElement(_dbConnSettings, "GetEntities", profileId);
+                foreach (JsonElement entity in entities.EnumerateArray())
+                    if (entity.GetProperty("kind").GetString() == "Item")
+                    {
+                        // the first item entity, the one that's scheduled
+                        if (entity.TryGetProperty("attributes", out JsonElement attributes) && attributes.ValueKind == JsonValueKind.Array)
+                            foreach (JsonElement attribute in attributes.EnumerateArray())
+                                names.Add(attribute.GetProperty("name").GetString() ?? "");
+                        break;
+                    }
+                return Ok(names);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // The profile's solve settings, { horizonDays, timeLimitSeconds, allowUnscheduled, lockHours, colourBy, labelBy, horizonStart }

@@ -13,4 +13,5 @@
 :r 06_Procedures_Catalogue.sql
 :r 10_Procedures_Model.sql
 :r 11_Procedures_Schedule.sql
+:r 12_Procedures_Security.sql
 :r 07_Seed_Catalogue.sql

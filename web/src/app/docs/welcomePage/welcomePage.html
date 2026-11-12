@@ -5,10 +5,10 @@
     <div class="grid">
         <div class="card actions">
             <h3>Get started</h3>
-            <button type="button" class="button" (click)="commands.run('profile.new')"><span class="icon">note_add</span>New profile</button>
+            <button type="button" class="button" [disabled]="!commands.isAllowed('profile.new')" (click)="commands.run('profile.new')"><span class="icon">note_add</span>New profile</button>
             <button type="button" class="button" (click)="commands.run('profile.open')"><span class="icon">folder_open</span>Open profile</button>
-            <button type="button" class="button" (click)="commands.run('connection.new')"><span class="icon">add_link</span>New connection</button>
-            <button type="button" class="button" [disabled]="!workspace.profile()" (click)="commands.run('source.add')"><span class="icon">travel_explore</span>Browse sources</button>
+            <button type="button" class="button" [disabled]="!commands.isAllowed('connection.new')" (click)="commands.run('connection.new')"><span class="icon">add_link</span>New connection</button>
+            <button type="button" class="button" [disabled]="!workspace.profile() || !commands.isAllowed('source.add')" (click)="commands.run('source.add')"><span class="icon">travel_explore</span>Browse sources</button>
         </div>
 
         @if(workspace.profile()) {

@@ -1,8 +1,8 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { getErrorMessage, INavNode, IProfile, IStatus, SchedulerApi } from '../api/schedulerApi';
+import { ApiError, getErrorMessage, ILogin, INavNode, IProfile, IProfileRights, IStatus, IUserSettings, SchedulerApi } from '../api/schedulerApi';
 
 export type DocKind = 'welcome' | 'profile' | 'openProfile' | 'connection' | 'sourceBrowser' | 'source' | 'object'
-    | 'entity' | 'relationship' | 'calendar' | 'rule' | 'scales' | 'schedule' | 'solveSettings';
+    | 'entity' | 'relationship' | 'calendar' | 'rule' | 'scales' | 'schedule' | 'solveSettings' | 'users';
 
 // A tab in the document area, params are what its kind needs, e.g. connectionId
 export interface IDocTab {
@@ -18,12 +18,19 @@ export interface IToast {
     tone : 'info' | 'ok' | 'error';
 }
 
-export type Theme = 'light' | 'dark';
 export type Density = 'comfortable' | 'compact';
 
-// The view settings kept in the browser between visits
+// Why the login didn't work, for the login error page
+export interface ILoginError {
+    kind : 'network' | 'access' | 'other';
+    title : string;
+    message : string;
+}
+// What a user with no role on the open profile can do, nothing
+const NO_RIGHTS : IProfileRights = { profileId : '', readModel : false, editModel : false, viewSchedule : false, solve : false, manageUsers : false };
+
+// The view settings kept in the browser between visits, the sidebar and properties panel are kept per user on the server
 interface IPrefs {
-    theme : Theme;
     density : Density;
     navigator : boolean;
     properties : boolean;
@@ -34,7 +41,6 @@ const PREFS_KEY = 'scheduler.prefs';
 
 function loadPrefs() : IPrefs {
     const defaults : IPrefs = {
-        theme : window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
         density : 'comfortable',
         navigator : true,
         properties : true,
@@ -46,6 +52,8 @@ function loadPrefs() : IPrefs {
         // ids were numbers before they were guids
         if(typeof saved.profileId != 'string')
             saved.profileId = null;
+        // there's one look now, the old theme setting is dropped
+        delete saved.theme;
         return { ...defaults, ...saved };
     }
     catch(e) {
@@ -72,7 +80,14 @@ export class WorkspaceService {
     private readonly prefs = loadPrefs();
     private toastCount = 0;
 
-    readonly theme = signal<Theme>(this.prefs.theme);
+    // The signed in Windows user, null until the login has worked
+    readonly user = signal<ILogin | null>(null);
+    readonly loginError = signal<ILoginError | null>(null);
+    readonly loggingIn = signal<boolean>(false);
+    readonly loggedIn = computed<boolean>(() => this.user() != null);
+    // Kept per user on the server, the navigation sidebar shrunk to its icons and the properties panel shrunk to a strip
+    readonly sidebarCollapsed = signal<boolean>(false);
+    readonly propertiesCollapsed = signal<boolean>(false);
     readonly density = signal<Density>(this.prefs.density);
     readonly showNavigator = signal<boolean>(this.prefs.navigator);
     readonly showProperties = signal<boolean>(this.prefs.properties);
@@ -81,6 +96,20 @@ export class WorkspaceService {
     readonly profiles = signal<IProfile[]>([]);
     readonly profileId = signal<string | null>(this.prefs.profileId);
     readonly profile = computed<IProfile | null>(() => this.profiles().find(x => x.id == this.profileId()) ?? null);
+    // What the user can do in the open profile, a site owner can do everything, the API checks every call again
+    readonly rights = computed<IProfileRights>(() => {
+        const user = this.user();
+        const profileId = this.profileId();
+        if(!user || !profileId)
+            return NO_RIGHTS;
+        if(user.siteOwner)
+            return { profileId : profileId, readModel : true, editModel : true, viewSchedule : true, solve : true, manageUsers : true };
+        return user.profiles.find(x => x.profileId == profileId) ?? NO_RIGHTS;
+    });
+    // A solver only, they see the schedule and nothing of the model behind it
+    readonly solverOnly = computed<boolean>(() => this.rights().viewSchedule && !this.rights().readModel);
+    // Can give out roles somewhere, the site's owners or any profile's users
+    readonly canManageUsers = computed<boolean>(() => this.user()?.siteOwner == true || this.user()?.profiles.some(x => x.manageUsers) == true);
 
     readonly navigator = signal<INavNode[]>([]);
     readonly navigatorLoading = signal<boolean>(false);
@@ -114,12 +143,10 @@ export class WorkspaceService {
     readonly validationCount = computed<number>(() => this.getFolder('connections').filter(x => x.badge == 'error').length);
 
     constructor() {
-        // the theme and density go on the page, and every setting is kept for next time
+        // the density goes on the page, and every setting is kept for next time
         effect(() => {
-            document.documentElement.dataset['theme'] = this.theme();
             document.documentElement.dataset['density'] = this.density();
             const prefs : IPrefs = {
-                theme : this.theme(),
                 density : this.density(),
                 navigator : this.showNavigator(),
                 properties : this.showProperties(),
@@ -134,8 +161,11 @@ export class WorkspaceService {
         });
     }
 
-    // Loads the status, the profiles and the last profile used, or the first one
+    // Logs in with the Windows sign in, then loads the status, the profiles and the last profile used, or the first one
+    // nothing else is asked of the API until the login works, the login error page has Try again
     async init() : Promise<void> {
+        if(!await this.login())
+            return;
         await this.refreshStatus();
         try {
             const profiles = await this.api.getProfiles();
@@ -143,10 +173,67 @@ export class WorkspaceService {
             const keep = profiles.find(x => x.id == this.profileId()) ?? profiles[0] ?? null;
             this.profileId.set(keep?.id ?? null);
             await this.refreshNavigator();
+            this.openStartDoc();
         }
         catch(e) {
             this.toast(getErrorMessage(e), 'error');
         }
+    }
+    async login() : Promise<boolean> {
+        this.loggingIn.set(true);
+        try {
+            const user = await this.api.login();
+            this.user.set(user);
+            this.sidebarCollapsed.set(user.settings?.sidebarCollapsed == true);
+            this.propertiesCollapsed.set(user.settings?.propertiesCollapsed == true);
+            this.loginError.set(null);
+        }
+        catch(e) {
+            this.user.set(null);
+            this.loginError.set(this.getLoginError(e));
+        }
+        this.loggingIn.set(false);
+        return this.user() != null;
+    }
+    // Reads the user's rights again, e.g. after their roles changed
+    async refreshUser() : Promise<void> {
+        try {
+            this.user.set(await this.api.login());
+            await this.refreshProfiles();
+        }
+        catch(e) {
+            this.toast(getErrorMessage(e), 'error');
+        }
+    }
+    private getLoginError(e : unknown) : ILoginError {
+        const status = e instanceof ApiError ? e.status : -1;
+        if(status == 0)
+            return { kind : 'network', title : 'Unable to connect', message : getErrorMessage(e) };
+        if(status == 401 || status == 403)
+            return { kind : 'access', title : 'Access denied', message : 'You do not have access to the Scheduler, sign in to Windows with your domain account' };
+        return { kind : 'other', title : 'Unable to log in', message : getErrorMessage(e) };
+    }
+    // The sidebar and the properties panel are remembered for the user, wherever they sign in
+    toggleSidebar() : void {
+        this.sidebarCollapsed.update(x => !x);
+        this.saveSettings({ sidebarCollapsed : this.sidebarCollapsed() });
+    }
+    toggleProperties() : void {
+        this.propertiesCollapsed.update(x => !x);
+        this.saveSettings({ propertiesCollapsed : this.propertiesCollapsed() });
+    }
+    private async saveSettings(settings : IUserSettings) : Promise<void> {
+        try {
+            await this.api.saveUserSettings(settings);
+        }
+        catch(e) {
+            this.toast(`Your settings weren't saved: ${getErrorMessage(e)}`, 'error');
+        }
+    }
+    // A solver goes straight to the schedule, it's all they can see
+    private openStartDoc() : void {
+        if(this.solverOnly())
+            this.openRun(null);
     }
     async refreshStatus() : Promise<void> {
         try {
@@ -168,6 +255,7 @@ export class WorkspaceService {
         this.docs.update(x => x.filter(y => y.kind == 'welcome' || y.kind == 'connection'));
         this.activeDocId.set('welcome');
         await this.refreshNavigator();
+        this.openStartDoc();
     }
     async refreshNavigator() : Promise<void> {
         const profileId = this.profileId();
