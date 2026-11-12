@@ -34,10 +34,23 @@ namespace Scheduler.Api.Tests
         public static readonly string SourcePassword = "Src!" + Guid.NewGuid().ToString("N");
         // A new key each run, a real server keeps its own in Sources:Key
         public static readonly string SourceKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        public const string SiteOwner = "TEST\\owner";
+        // A client signed in as another user
+        public HttpClient CreateClientAs(string userName)
+        {
+            HttpClient client = CreateClient();
+            client.DefaultRequestHeaders.Add("X-Scheduler-User", userName);
+            return client;
+        }
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("SchedulerDBConn", ConnectionString);
             builder.UseSetting("Sources:Key", SourceKey);
+            // calls sign in as the site owner, or as X-Scheduler-User to try the other roles
+            builder.UseSetting("Security:Mode", "Development");
+            builder.UseSetting("Security:DevUser", SiteOwner);
+            builder.UseSetting("Security:AllowUserHeader", "true");
+            builder.UseSetting("Security:SiteOwners:0", SiteOwner);
         }
         protected override void Dispose(bool disposing)
         {

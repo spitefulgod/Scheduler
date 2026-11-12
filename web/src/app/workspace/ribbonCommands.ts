@@ -5,7 +5,7 @@ export interface IRibbonButton {
     icon : string;
     size : 'large' | 'small';
     milestone? : number;
-    // Shows as pressed while it's on, e.g. Dark theme
+    // Shows as pressed while it's on, e.g. Compact
     toggle? : boolean;
 }
 export interface IRibbonGroup {
@@ -34,7 +34,8 @@ export const RIBBON : IRibbonTab[] = [
         { label : 'Profile', buttons : [large('profile.new', 'New Profile', 'note_add'), large('profile.open', 'Open', 'folder_open'),
             small('profile.save', 'Save', 'save'), small('profile.properties', 'Properties', 'tune'), small('profile.duplicate', 'Duplicate', 'content_copy', 99)] },
         { label : 'Edit', buttons : [small('edit.undo', 'Undo', 'undo', 99), small('edit.redo', 'Redo', 'redo', 99)] },
-        { label : 'Check', buttons : [large('profile.validate', 'Validate', 'fact_check')] }
+        { label : 'Check', buttons : [large('profile.validate', 'Validate', 'fact_check')] },
+        { label : 'Security', buttons : [large('security.users', 'Users & Roles', 'admin_panel_settings')] }
     ] },
     { id : 'data', label : 'Data', groups : [
         { label : 'Connections', buttons : [large('connection.new', 'New Connection', 'add_link'),
@@ -68,9 +69,12 @@ export const RIBBON : IRibbonTab[] = [
         { label : 'Panels', buttons : [toggle(large('view.navigator', 'Navigator', 'side_navigation')),
             toggle(large('view.properties', 'Properties', 'right_panel_open'))] },
         { label : 'Appearance', buttons : [toggle(small('view.density', 'Compact', 'density_small')),
-            toggle(small('view.theme', 'Dark theme', 'dark_mode'))] }
+            toggle(small('view.sidebar', 'Collapse sidebar', 'left_panel_close')), toggle(small('view.propertiesCollapsed', 'Collapse properties', 'right_panel_close'))] }
     ] }
 ];
+
+// The tabs a solver sees, the rest are the model behind the schedule
+export const SOLVER_TABS : string[] = ['home', 'schedule', 'view'];
 
 // The buttons at the top left, beside the title
 export const QUICK_ACCESS : IRibbonButton[] = [

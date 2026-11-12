@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommandService } from '../../workspace/commandService';
-import { IRibbonButton, IRibbonGroup, IRibbonTab, QUICK_ACCESS, RIBBON } from '../../workspace/ribbonCommands';
+import { IRibbonButton, IRibbonGroup, IRibbonTab, QUICK_ACCESS, RIBBON, SOLVER_TABS } from '../../workspace/ribbonCommands';
 import { WorkspaceService } from '../../workspace/workspaceService';
 
 // The Office style ribbon, a title bar with the quick access buttons, the tabs, then groups of large and stacked small buttons
@@ -12,10 +12,11 @@ import { WorkspaceService } from '../../workspace/workspaceService';
 export class Ribbon {
     readonly workspace = inject(WorkspaceService);
     readonly commands = inject(CommandService);
-    readonly tabs = RIBBON;
+    // a solver only gets the tabs for the schedule
+    readonly tabs = computed<IRibbonTab[]>(() => this.workspace.solverOnly() ? RIBBON.filter(x => SOLVER_TABS.includes(x.id)) : RIBBON);
     readonly quickAccess = QUICK_ACCESS;
     readonly activeTab = signal<string>('home');
-    readonly tab = computed<IRibbonTab>(() => this.tabs.find(x => x.id == this.activeTab())!);
+    readonly tab = computed<IRibbonTab>(() => this.tabs().find(x => x.id == this.activeTab()) ?? this.tabs()[0]);
 
     getLarge(group : IRibbonGroup) : IRibbonButton[] {
         return group.buttons.filter(x => x.size == 'large');

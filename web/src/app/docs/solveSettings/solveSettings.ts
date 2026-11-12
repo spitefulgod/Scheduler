@@ -23,8 +23,7 @@ export class SolveSettings implements OnInit {
         if(!profileId)
             return;
         try {
-            const entities = await this.api.getEntities(profileId);
-            this.attributes.set(entities.find(x => x.kind == 'Item')?.attributes.map(x => x.name) ?? []);
+            this.attributes.set(await this.api.getScheduleAttributes(profileId));
         }
         catch(e) {
         }

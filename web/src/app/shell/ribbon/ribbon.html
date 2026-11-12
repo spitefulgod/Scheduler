@@ -17,8 +17,8 @@
 </div>
 
 <div class="tabs" role="tablist">
-    @for(item of tabs; track item.id) {
-        <button type="button" role="tab" class="tab" [class.active]="item.id == activeTab()" [attr.aria-selected]="item.id == activeTab()"
+    @for(item of tabs(); track item.id) {
+        <button type="button" role="tab" class="tab" [class.active]="item.id == tab().id" [attr.aria-selected]="item.id == tab().id"
             (click)="selectTab(item.id)" (dblclick)="toggleCollapsed()">{{ item.label }}</button>
     }
     <div class="spacer"></div>

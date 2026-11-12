@@ -9,6 +9,7 @@ namespace Scheduler.Api.Controllers
     // A profile's rules, each a block from the catalogue with who it's for and its parameters, and the check that runs them without solving
     [Route("api/profiles/{profileId}")]
     [ApiController]
+    [ProfileAccess(Access.ReadModel, Access.EditModel)]
     public class RulesController : BaseController
     {
         private readonly ISourceSecrets _secrets;
@@ -56,6 +57,7 @@ namespace Scheduler.Api.Controllers
 
         // Reads the data and runs the rule engine without solving: what it found wrong, and how many items each rule touches
         [HttpPost("rules/check")]
+        [ProfileAccess(Access.ReadModel)]
         public async Task<IActionResult> Check(string profileId)
         {
             try

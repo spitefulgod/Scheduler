@@ -8,6 +8,7 @@ namespace Scheduler.Api.Controllers
     // The tables, views and saved selects a profile reads from, their columns are kept so they can be mapped without connecting
     [Route("api/profiles/{profileId}/sources")]
     [ApiController]
+    [ProfileAccess(Access.ReadModel, Access.EditModel)]
     public class SourcesController : BaseController
     {
         private readonly ISourceSecrets _secrets;

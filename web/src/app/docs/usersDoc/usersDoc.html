@@ -1,0 +1,88 @@
+<div class="doc">
+    <h2>Users &amp; roles</h2>
+    <p class="lead">Everyone signs in with their Windows domain account. Give roles to a domain user or group, e.g. CONTOSO\jsmith or CONTOSO\Planners.</p>
+
+    @if(workspace.rights().manageUsers && workspace.profile(); as profile) {
+        <section class="card">
+            <div class="sectionHead">
+                <div>
+                    <h3>{{ profile.name }}</h3>
+                    <p class="muted">Who can use this profile and what they can do in it.</p>
+                </div>
+            </div>
+            <div class="roleKey">
+                @for(choice of roles; track choice.role) {
+                    <div><span class="pill" [class]="getRoleTone(choice.role)">{{ choice.label }}</span> {{ choice.description }}</div>
+                }
+            </div>
+            <form class="add" (ngSubmit)="addUser()">
+                <div class="field grow">
+                    <label for="newUser">Domain user or group</label>
+                    <input id="newUser" name="newUser" [(ngModel)]="newUser" placeholder="CONTOSO\jsmith" autocomplete="off" />
+                </div>
+                <div class="field">
+                    <label for="newRole">Role</label>
+                    <select id="newRole" name="newRole" [(ngModel)]="newRole">
+                        @for(choice of roles; track choice.role) {
+                            <option [value]="choice.role">{{ choice.label }}</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="button primary" [disabled]="busy() || !newUser.trim()"><span class="icon">person_add</span>Add</button>
+            </form>
+            <table class="table">
+                <thead><tr><th>User or group</th><th>Role</th><th>Given by</th><th>On</th><th class="shrink"></th></tr></thead>
+                <tbody>
+                    @for(user of profileUsers(); track user.id) {
+                        <tr>
+                            <td>{{ user.userName }}</td>
+                            <td><span class="pill" [class]="getRoleTone(user.role)">{{ getRoleLabel(user.role) }}</span></td>
+                            <td class="muted">{{ user.createdBy ?? '-' }}</td>
+                            <td class="muted">{{ formatDate(user.created) }}</td>
+                            <td class="shrink">
+                                <button type="button" class="button ghost" title="Take this role away" [disabled]="busy()" (click)="removeUser(user)"><span class="icon">close</span></button>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr><td colspan="5" class="muted">Nobody has a role on this profile yet, site owners can always use it.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    @if(workspace.user()?.siteOwner) {
+        <section class="card">
+            <div class="sectionHead">
+                <div>
+                    <h3>Site owners</h3>
+                    <p class="muted">Site owners can do everything: add profiles, set up connections and give out every role.</p>
+                </div>
+            </div>
+            <form class="add" (ngSubmit)="addSiteOwner()">
+                <div class="field grow">
+                    <label for="newSiteOwner">Domain user or group</label>
+                    <input id="newSiteOwner" name="newSiteOwner" [(ngModel)]="newSiteOwner" placeholder="CONTOSO\jsmith" autocomplete="off" />
+                </div>
+                <button type="submit" class="button primary" [disabled]="busy() || !newSiteOwner.trim()"><span class="icon">person_add</span>Add</button>
+            </form>
+            <table class="table">
+                <thead><tr><th>User or group</th><th>Given by</th><th>On</th><th class="shrink"></th></tr></thead>
+                <tbody>
+                    @for(owner of siteOwners(); track owner.id) {
+                        <tr>
+                            <td>{{ owner.userName }}</td>
+                            <td class="muted">{{ owner.createdBy ?? '-' }}</td>
+                            <td class="muted">{{ formatDate(owner.created) }}</td>
+                            <td class="shrink">
+                                <button type="button" class="button ghost" title="Take this role away" [disabled]="busy() || siteOwners().length < 2" (click)="removeSiteOwner(owner)"><span class="icon">close</span></button>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr><td colspan="4" class="muted">The site owners are set in the API's config (Security:SiteOwners).</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+</div>

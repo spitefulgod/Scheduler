@@ -64,7 +64,9 @@ Every change to a table or its data is made in two places:
 | `07_Seed_Catalogue.sql` | Connection types, the rule block catalogue with each block's parameters, the Boolean, Graded and Number scales |
 | `10_Procedures_Model.sql` | Entities and attributes, relationships and their values, value scales, calendars, rules, settings, `GetProfileModel` |
 | `11_Procedures_Schedule.sql` | Solve runs, results, the published plan, publish and discard, plan locks |
+| `12_Procedures_Security.sql` | User roles (`GetUserRoles`, `ClaimSiteOwner`, `SaveUserRole`, `DeleteUserRole`) and per user settings |
 | `Updates/0002_PlansAndLocks.sql` | Profile settings, richer runs and assignments, `PlanLocks` |
+| `Updates/0003_UserSecurity.sql` | `UserRoles` and `UserSettings` |
 
 ## API
 
@@ -80,7 +82,9 @@ Keep the key out of the repo, each server has its own and keeps it, e.g.
 
 | | |
 | --- | --- |
-| `GET/POST/PUT /api/profiles`, `GET /api/profiles/{id}/navigator` | Profiles and the navigator tree |
+| `GET /api/user/login`, `PUT /api/user/settings` | The signed in Windows user, what they can do in each profile, their own settings |
+| `GET/POST/DELETE /api/site-owners`, `GET/POST/DELETE /api/profiles/{id}/users` | Site owners, a profile's owners, readers and solvers |
+| `GET/POST/PUT /api/profiles`, `GET /api/profiles/{id}/navigator` | Profiles (the ones the user has a role in) and the navigator tree |
 | `GET/POST/PUT/DELETE /api/connections` | Connections, the password is never sent back, only `hasPassword` |
 | `POST /api/connections/test`, `POST /api/connections/{id}/test` | Test what's in the wizard, or a saved connection |
 | `GET /api/connections/{id}/objects`, `.../objects/columns`, `.../objects/preview` | Tables and views, columns, first 200 rows |
@@ -93,6 +97,34 @@ Keep the key out of the repo, each server has its own and keeps it, e.g.
 | `GET .../schedule/runs`, `.../runs/{id}`, `.../plan` | Runs, one with its assignments and changes against the plan, the published plan |
 | `POST .../runs/{id}/stop`, `.../publish`, `.../discard` | Stop with the best so far, make it the plan, throw it away |
 | `GET/POST/DELETE .../schedule/locks`, `PUT .../schedule/settings` | Window and item locks, the profile's solve settings |
+| `GET .../schedule/attributes` | The item attribute names for the Gantt's colour and label, so a solver needn't read the model |
+
+## Signing in and roles
+
+Domain users sign in with Windows, as in the Recommit upload site: the API uses Negotiate (Kerberos or NTLM) and every call
+needs a signed in user. The web app logs in once at the start (`GET api/user/login`, display name and email from the domain)
+before anything shows, and shows a login error page with **Try again** when it can't. Every call goes with the Windows sign in
+(`credentials : 'include'`, CORS allows credentials). Under IIS turn on Windows Authentication for the site and turn
+Anonymous off, and add the site to the Local intranet zone if the browser doesn't send the sign in on its own.
+
+Roles are given to a domain user or a domain group (`CONTOSO\jsmith`, `CONTOSO\Planners`) on **Users & roles**:
+
+| Role | Can |
+| --- | --- |
+| Site owner | Everything: add profiles, set up connections, give out every role, including site owner |
+| Project owner | Everything in their profile, says who else can use it, sets up connections |
+| Project reader | Sees the whole profile and its schedule, changes nothing (editors are shown turned off) |
+| Project solver | Only the schedule: solve, what-if, resource down, publish or discard, locks and solve settings. The navigator, the model ribbon tabs and every model call (`entities`, `rules`, `sources`, ...) are refused |
+
+The API enforces this, the screen only hides what the user can't use. Each action carries a `[ProfileAccess]` saying what it
+needs for GET and for changes, and an action without one is refused. `Security:SiteOwners` in `appsettings.json` lists site
+owners that can't be locked out. When it's empty and nobody is a site owner yet, the first user to sign in becomes one.
+
+Away from the domain, e.g. on a laptop, `Security:Mode` `Development` (only allowed in the Development environment) signs every
+call in as `Security:DevUser`, and with `Security:AllowUserHeader` the `X-Scheduler-User` header picks the user. The tests use
+this to try each role.
+
+Each user's sidebar and properties panel (collapsed or not) are kept in `UserSettings`, so they follow the user to any machine.
 
 `SCHEDULER_SOLVER_LOG=1` in the API's environment writes CP-SAT's search log to the console, for tuning.
 
@@ -108,7 +140,7 @@ dotnet run --project Scheduler.Api        # http://localhost:5080
 
 cd web
 npm install
-npm start                                 # http://localhost:4200, calls the API through CORS
+npm start                                 # http://localhost:4200, calls the API through CORS with the Windows sign in
 ```
 
 ## Build and test

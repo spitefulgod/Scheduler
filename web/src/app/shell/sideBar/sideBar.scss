@@ -1,0 +1,138 @@
+// The Recommit upload site's navigation, dark, down the left
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--nav-bg);
+    color: var(--nav-text);
+    padding: 18px 12px 12px;
+    overflow-y: auto;
+    user-select: none;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 8px 22px;
+}
+// the brand mark collapses and expands the sidebar
+.brandMark.toggle {
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    transition: filter 0.12s;
+    &:hover {
+        filter: brightness(1.15);
+    }
+}
+.brandName {
+    color: #fff;
+    font-weight: 650;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+}
+.brandSub {
+    font-size: 12px;
+    color: var(--nav-faint);
+}
+.navGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 18px;
+}
+.navLabel {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5d6c86;
+    padding: 0 10px 6px;
+}
+.navEmpty {
+    padding: 0 10px;
+    font-size: 12px;
+    color: var(--nav-faint);
+}
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--nav-text);
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background 0.12s,
+        color 0.12s;
+    .icon {
+        font-size: 18px;
+        flex: none;
+    }
+    .label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    &:hover {
+        background: var(--nav-hover);
+        color: var(--nav-text-active);
+    }
+    &.active {
+        background: var(--nav-active);
+        color: var(--nav-text-active);
+        box-shadow: inset 2px 0 0 #5b84ff;
+    }
+}
+.me {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px 4px;
+    border-top: 1px solid var(--nav-line);
+    .person {
+        flex: 1;
+    }
+    .name {
+        color: #fff;
+        font-size: 12.5px;
+    }
+    .email {
+        color: var(--nav-faint);
+        font-size: 12px;
+    }
+}
+
+// Shrunk to its icons, the labels go and the tooltips say what each one is
+:host-context(.sidebarCollapsed) {
+    padding: 18px 10px 12px;
+    .label,
+    .navLabel {
+        display: none;
+    }
+    .brand {
+        justify-content: center;
+        padding: 0 0 22px;
+    }
+    .navItem {
+        justify-content: center;
+        padding: 0;
+    }
+    .navGroup {
+        padding-top: 8px;
+        border-top: 1px solid var(--nav-line);
+    }
+    .me {
+        justify-content: center;
+        padding: 12px 0 4px;
+        .person {
+            flex: none;
+        }
+    }
+}

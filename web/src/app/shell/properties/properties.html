@@ -1,37 +1,49 @@
-<div class="head">Properties</div>
-@if(workspace.selection(); as selected) {
-    <div class="title">
-        <span class="icon">{{ selected.icon }}</span>
-        <div>
-            <div class="name">{{ selected.label }}</div>
-            <div class="kind">{{ selected.kind }}</div>
-        </div>
-    </div>
-    <dl>
-        @for(row of rows(); track row[0]) {
-            <dt>{{ row[0] }}</dt>
-            <dd [class.muted]="row[1] == null">{{ row[1] ?? '-' }}</dd>
-        }
-    </dl>
-    @if(selected.kind != 'folder') {
-        <button type="button" class="button" (click)="workspace.openNode(selected)"><span class="icon">open_in_new</span>Open</button>
-    }
-} @else if(workspace.profile(); as profile) {
-    <div class="title">
-        <span class="icon">tune</span>
-        <div>
-            <div class="name">{{ profile.name }}</div>
-            <div class="kind">profile</div>
-        </div>
-    </div>
-    <dl>
-        <dt>Description</dt>
-        <dd [class.muted]="!profile.description">{{ profile.description || '-' }}</dd>
-        <dt>Time unit</dt>
-        <dd>{{ profile.timeUnitMinutes }} minutes</dd>
-        <dt>Changed</dt>
-        <dd>{{ formatDate(profile.modified ?? profile.created) }}</dd>
-    </dl>
+@if(workspace.propertiesCollapsed()) {
+    <button type="button" class="expand" title="Expand properties" aria-expanded="false" (click)="workspace.toggleProperties()">
+        <span class="icon">left_panel_open</span>
+        <span class="vertical">Properties</span>
+    </button>
 } @else {
-    <p class="empty">Select an item to see its properties.</p>
+    <div class="head">
+        <span>Properties</span>
+        <button type="button" class="collapse" title="Collapse properties" aria-expanded="true" (click)="workspace.toggleProperties()">
+            <span class="icon">right_panel_close</span>
+        </button>
+    </div>
+    @if(workspace.selection(); as selected) {
+        <div class="title">
+            <span class="icon">{{ selected.icon }}</span>
+            <div>
+                <div class="name">{{ selected.label }}</div>
+                <div class="kind">{{ selected.kind }}</div>
+            </div>
+        </div>
+        <dl>
+            @for(row of rows(); track row[0]) {
+                <dt>{{ row[0] }}</dt>
+                <dd [class.muted]="row[1] == null">{{ row[1] ?? '-' }}</dd>
+            }
+        </dl>
+        @if(selected.kind != 'folder') {
+            <button type="button" class="button" (click)="workspace.openNode(selected)"><span class="icon">open_in_new</span>Open</button>
+        }
+    } @else if(workspace.profile(); as profile) {
+        <div class="title">
+            <span class="icon">tune</span>
+            <div>
+                <div class="name">{{ profile.name }}</div>
+                <div class="kind">profile</div>
+            </div>
+        </div>
+        <dl>
+            <dt>Description</dt>
+            <dd [class.muted]="!profile.description">{{ profile.description || '-' }}</dd>
+            <dt>Time unit</dt>
+            <dd>{{ profile.timeUnitMinutes }} minutes</dd>
+            <dt>Changed</dt>
+            <dd>{{ formatDate(profile.modified ?? profile.created) }}</dd>
+        </dl>
+    } @else {
+        <p class="empty">Select an item to see its properties.</p>
+    }
 }

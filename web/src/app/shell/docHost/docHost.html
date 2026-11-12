@@ -10,7 +10,8 @@
 </div>
 <div class="body">
     @for(doc of workspace.docs(); track doc.id) {
-        <div class="pane" [hidden]="doc.id != workspace.activeDocId()">
+        <!-- a document the user's role can't change is shown with everything in it turned off -->
+        <fieldset class="pane" [hidden]="doc.id != workspace.activeDocId()" [disabled]="isReadOnly(doc)">
             @switch(doc.kind) {
                 @case('welcome') {
                     <app-welcome-page />
@@ -51,11 +52,14 @@
                 @case('solveSettings') {
                     <app-solve-settings />
                 }
+                @case('users') {
+                    <app-users-doc />
+                }
                 @case('object') {
                     <app-object-doc [doc]="doc" />
                 }
             }
-        </div>
+        </fieldset>
     }
     @if(!workspace.docs().length) {
         <div class="none">Double click an item in the navigator to open it.</div>

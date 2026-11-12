@@ -10,6 +10,7 @@ namespace Scheduler.Api.Controllers
     // values can be read live from a source, typed in, or both, a typed in value wins
     [Route("api/profiles/{profileId}/relationships")]
     [ApiController]
+    [ProfileAccess(Access.ReadModel, Access.EditModel)]
     public class RelationshipsController : BaseController
     {
         private readonly ISourceSecrets _secrets;

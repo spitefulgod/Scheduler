@@ -1,20 +1,51 @@
-<app-ribbon />
-<main [class.noNav]="!workspace.showNavigator()" [class.noProps]="!workspace.showProperties()">
-    @if(workspace.showNavigator()) {
-        <app-navigator class="nav" />
-    }
-    <app-doc-host class="docs" />
-    @if(workspace.showProperties()) {
-        <app-properties class="props" />
-    }
-</main>
-<app-status-bar />
+@if(workspace.loggedIn()) {
+    <div class="layout" [class.sidebarCollapsed]="workspace.sidebarCollapsed()">
+        <app-side-bar class="sidebar" />
+        <div class="work">
+            <app-ribbon />
+            <main [class.noNav]="!showNavigator()" [class.noProps]="!workspace.showProperties()" [class.propsCollapsed]="workspace.propertiesCollapsed()">
+                @if(showNavigator()) {
+                    <app-navigator class="nav" />
+                }
+                <app-doc-host class="docs" />
+                @if(workspace.showProperties()) {
+                    <app-properties class="props" />
+                }
+            </main>
+            <app-status-bar />
+        </div>
+    </div>
+} @else if(workspace.loginError(); as error) {
+    <div class="splash">
+        <div class="splashCard card">
+            <div class="brandMark"><span class="icon">{{ error.kind == 'network' ? 'cloud_off' : 'shield' }}</span></div>
+            <h2>{{ error.title }}</h2>
+            <div class="notice error">
+                <span class="icon">error</span>
+                <span>{{ error.message }}</span>
+            </div>
+            <div class="splashActions">
+                <button type="button" class="button primary" [disabled]="workspace.loggingIn()" (click)="retry()">
+                    <span class="icon">refresh</span> {{ workspace.loggingIn() ? 'Trying...' : 'Try again' }}
+                </button>
+            </div>
+        </div>
+    </div>
+} @else {
+    <div class="splash">
+        <div class="brandMark large"><span class="icon">view_timeline</span></div>
+        <div class="splashText">
+            <span class="spinner"></span>
+            Signing you in
+        </div>
+    </div>
+}
 
 <div class="toasts" aria-live="polite">
     @for(toast of workspace.toasts(); track toast.id) {
         <div class="toast" [class]="toast.tone">
             <span class="icon">{{ getToastIcon(toast.tone) }}</span>
-            {{ toast.text }}
+            <span class="toastText">{{ toast.text }}</span>
         </div>
     }
 </div>
