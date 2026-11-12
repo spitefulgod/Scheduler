@@ -36,7 +36,7 @@ namespace Scheduler.Api.Tests
         public static readonly string SourceKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseSetting("SchedulerDBConn", ConnectionString);
+            builder.UseSetting("ConnectionStrings:SchedulerDBConn", ConnectionString);
             builder.UseSetting("Sources:Key", SourceKey);
         }
         protected override void Dispose(bool disposing)

@@ -12,7 +12,7 @@ namespace Scheduler.Api.Controllers
 
         public BaseController(IConfiguration configuration)
         {
-            _dbConnSettings = configuration["SchedulerDBConn"]!.ToString();
+            _dbConnSettings = configuration["ConnectionStrings:SchedulerDBConn"]!.ToString();
         }
         // Returns the json from a stored procedure as a json response (Ok(string) would be text/plain)
         protected IActionResult OkJson(string? json)

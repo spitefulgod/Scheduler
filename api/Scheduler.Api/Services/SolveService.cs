@@ -38,7 +38,7 @@ namespace Scheduler.Api.Services
 
         public SolveService(IConfiguration configuration, ISourceSecrets secrets, ILogger<SolveService> logger)
         {
-            _dbConnSettings = configuration["SchedulerDBConn"]!.ToString();
+            _dbConnSettings = configuration["ConnectionStrings:SchedulerDBConn"]!.ToString();
             _secrets = secrets;
             _logger = logger;
             // a run that was going when the API last stopped never finishes, so it can't block new ones
